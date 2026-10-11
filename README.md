@@ -1,1 +1,3309 @@
-sfsdfasdf
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fantasy RPG Class Codex</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+  :root {
+    --bg-dark: #0f0c1a; --bg-card: #1a1528; --gold: #d4af37; --gold-dim: #b8860b;
+    --text: #e8e0d0; --text-dim: #a89f8f; --accent: #6b4c9a; --border: #3a2f55;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Crimson Text', Georgia, serif;
+    background: var(--bg-dark); color: var(--text); min-height: 100vh; line-height: 1.5;
+    background-image: radial-gradient(ellipse at top, #1a1030 0%, transparent 60%),
+                      radial-gradient(ellipse at bottom right, #0d1a2a 0%, transparent 50%);
+  }
+  header {
+    text-align: center; padding: 2.5rem 1rem 1.5rem; border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #1a1030 0%, transparent 100%);
+  }
+  header h1 {
+    font-family: 'Cinzel', serif; font-size: 2.8rem; color: var(--gold);
+    letter-spacing: 0.15em; text-shadow: 0 0 20px rgba(212,175,55,0.3);
+  }
+  header p { color: var(--text-dim); margin-top: 0.5rem; font-size: 1.15rem; }
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center;
+    padding: 1.25rem; max-width: 1200px; margin: 0 auto;
+  }
+  .controls input {
+    background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+    padding: 0.6rem 1rem; border-radius: 6px; font-family: inherit; font-size: 1rem; min-width: 220px;
+  }
+  .controls input:focus { outline: none; border-color: var(--gold); }
+  .filter-btn {
+    background: var(--bg-card); border: 1px solid var(--border); color: var(--text-dim);
+    padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer;
+    font-family: 'Cinzel', serif; font-size: 0.85rem; transition: all 0.2s;
+  }
+  .filter-btn:hover, .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .filter-btn[data-role="Fighter"].active { background: #c0392b; border-color: #c0392b; }
+  .filter-btn[data-role="Caster"].active { background: #8e44ad; border-color: #8e44ad; }
+  .filter-btn[data-role="Skirmisher"].active { background: #27ae60; border-color: #27ae60; }
+  .filter-btn[data-role="Starter"].active { background: #2980b9; border-color: #2980b9; }
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 1.5rem; padding: 1rem 1.5rem 3rem; max-width: 1400px; margin: 0 auto;
+  }
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    cursor: pointer; display: flex; flex-direction: column;
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.4); border-color: var(--gold-dim); }
+  .card.starter { border-color: #2980b9; box-shadow: 0 0 12px rgba(41,128,185,0.25); }
+  .card-header {
+    padding: 1.25rem 1.25rem 0.75rem; display: flex; align-items: flex-start; gap: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .class-icon {
+    width: 96px; height: 112px; display: flex; align-items: center; justify-content: center;
+    background: #0d0a14; border-radius: 8px; border: 2px solid var(--border);
+    flex-shrink: 0; overflow: hidden;
+  }
+  .class-icon img { width: 100%; height: 100%; object-fit: cover; }
+  .class-icon svg { width: 80px; height: 94px; image-rendering: pixelated; }
+  .class-title h2 {
+    font-family: 'Cinzel', serif; font-size: 1.35rem; color: var(--gold); margin-bottom: 0.2rem;
+  }
+  .class-code { font-size: 0.75rem; color: var(--text-dim); letter-spacing: 0.1em; }
+  .role-badge {
+    display: inline-block; font-size: 0.68rem; padding: 0.18rem 0.5rem; border-radius: 10px;
+    font-family: 'Cinzel', serif; margin-top: 0.3rem; margin-right: 0.25rem;
+  }
+  .role-Fighter { background: #c0392b33; color: #e74c3c; border: 1px solid #c0392b55; }
+  .role-Caster { background: #8e44ad33; color: #bb8fce; border: 1px solid #8e44ad55; }
+  .role-Skirmisher { background: #27ae6033; color: #58d68d; border: 1px solid #27ae6055; }
+  .role-Starter { background: #2980b933; color: #5dade2; border: 1px solid #2980b955; }
+  .starter-badge {
+    background: #2980b9; color: white; font-size: 0.65rem; padding: 0.15rem 0.45rem;
+    border-radius: 4px; font-family: 'Cinzel', serif; margin-left: 0.4rem; vertical-align: middle;
+  }
+  .card-body { padding: 1rem 1.25rem; flex: 1; }
+  .stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem 1.1rem; margin-bottom: 0.8rem;
+  }
+  .stat-row { display: flex; align-items: center; gap: 0.45rem; font-size: 0.9rem; }
+  .stat-label { width: 34px; color: var(--text-dim); font-weight: 600; font-size: 0.78rem; }
+  .bar-container {
+    flex: 1; height: 18px; background: #0a0810; border-radius: 3px; position: relative;
+    overflow: hidden; border: 1px solid #2a2438;
+  }
+  .bar { height: 100%; border-radius: 2px; }
+  .bar-value {
+    position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+    text-align: center; font-size: 0.8rem; font-weight: 800; font-family: 'Cinzel', serif;
+    color: #111;
+    text-shadow: 0 0 3px rgba(255,255,255,0.95), 0 0 6px rgba(255,255,255,0.7);
+  }
+  .grade-only { font-family: 'Cinzel', serif; font-weight: 700; color: var(--gold); font-size: 1rem; }
+  .move-jump { display: flex; gap: 1.5rem; margin: 0.4rem 0 0.8rem; font-size: 0.95rem; }
+  .move-jump span { color: var(--text-dim); }
+  .move-jump strong { color: var(--gold); font-family: 'Cinzel', serif; }
+  .equip { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.6rem; }
+  .equip strong { color: var(--text); }
+  .section-title {
+    font-family: 'Cinzel', serif; font-size: 0.82rem; color: var(--gold-dim);
+    letter-spacing: 0.08em; margin: 0.85rem 0 0.35rem; border-bottom: 1px solid var(--border); padding-bottom: 0.2rem;
+  }
+  .package-list, .passive-list { list-style: none; font-size: 0.9rem; }
+  .package-list li, .passive-list li { padding: 0.18rem 0; color: var(--text-dim); }
+  .package-list li::before { content: "◆ "; color: var(--gold); font-size: 0.7rem; }
+  .passive-list li strong { color: var(--text); }
+  .ability {
+    background: #120e1c; border-left: 3px solid var(--accent); padding: 0.45rem 0.7rem;
+    margin-bottom: 0.4rem; border-radius: 0 4px 4px 0; font-size: 0.88rem;
+  }
+  .ability-name { font-weight: 600; color: var(--text); }
+  .ability-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.12rem; }
+  .ability-summary { color: var(--text-dim); margin-top: 0.12rem; }
+  .card.expanded .card-details { display: block; }
+  .card-details {
+    display: none; padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border);
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .expand-hint {
+    text-align: center; font-size: 0.75rem; color: var(--text-dim); padding: 0.5rem;
+    border-top: 1px solid var(--border);
+  }
+  footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.9rem; border-top: 1px solid var(--border); }
+  .hidden { display: none !important; }
+  @media (max-width: 600px) { header h1 { font-size: 1.9rem; } .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <header>
+    <h1>⚔️ Class Codex ⚔️</h1>
+    <p>Fantasy RPG Combat Classes — Starters first · Click any class to expand</p>
+  </header>
+  <div class="controls">
+    <input type="search" id="search" placeholder="Search classes, roles, abilities...">
+    <button class="filter-btn active" data-role="all">All</button>
+    <button class="filter-btn" data-role="Starter">Starters</button>
+    <button class="filter-btn" data-role="Fighter">Fighter</button>
+    <button class="filter-btn" data-role="Caster">Caster</button>
+    <button class="filter-btn" data-role="Skirmisher">Skirmisher</button>
+  </div>
+  <div class="grid" id="grid">
+
+    <div class="card starter" data-role="Starter" data-search="apprentice app fighter starter  apprentice mastery healthy i charity half-step counter move i half-step deep cut encourage defend support first-aid">
+      <div class="card-header">
+        <div class="class-icon"><img src="data:image/png;base64,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" alt="Apprentice"></div>
+        <div class="class-title">
+          <h2>Apprentice<span class="starter-badge">STARTER</span></h2>
+          <div class="class-code">APP</div>
+          <span class="role-badge role-Fighter">Fighter</span>
+          
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">C+</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>4</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Training Sword &nbsp;·&nbsp; <strong>Armor:</strong> Medium</div>
+        
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Apprentice Mastery</strong> — Gain 5% increased Experience.</li><li><strong>Healthy I</strong> — Gain 5% increased maximum HP.</li><li><strong>Charity</strong> — At the start of battle, grant adjacent allies [SM] DEF (3T).</li><li><strong>Half-Step Counter</strong> — When hit by an attack, counter with Half-Step at 33% potency.</li><li><strong>Move I</strong> — Move +1.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Half-Step</div>
+              <div class="ability-summary">100% Attack • Push 1</div>
+              <div class="ability-meta">Range: A · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Deep Cut</div>
+              <div class="ability-summary">100% Attack • 50% Bleed</div>
+              <div class="ability-meta">Range: S · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Encourage</div>
+              <div class="ability-summary">Grant [SM] ATK (3T)</div>
+              <div class="ability-meta">Range: 2 · Cost: 5 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Defend</div>
+              <div class="ability-summary">Take 25% reduced damage (1T)</div>
+              <div class="ability-meta">Range: S · Cost: -</div>
+            </div><div class="ability">
+              <div class="ability-name">Support</div>
+              <div class="ability-summary">Grant 2 MP</div>
+              <div class="ability-meta">Range: A · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">First-Aid</div>
+              <div class="ability-summary">Restore 10% HP • Remove Bleed</div>
+              <div class="ability-meta">Range: 2 · Cost: -</div>
+            </div>
+        
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card starter" data-role="Starter" data-search="mage mag caster starter  mage mastery staff mana fountain ability shuffle counter spell i magical slippers fire spark chill zap mana veil mystic heal glass shield">
+      <div class="card-header">
+        <div class="class-icon"><img src="data:image/png;base64,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" alt="Mage"></div>
+        <div class="class-title">
+          <h2>Mage<span class="starter-badge">STARTER</span></h2>
+          <div class="class-code">MAG</div>
+          <span class="role-badge role-Caster">Caster</span>
+          
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">B+</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Training Wand &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Mage Mastery</strong> — Gain 10% increased CP.</li><li><strong>Staff Mana Fountain</strong> — Restore 1 MP at the start of your turn.</li><li><strong>Ability Shuffle</strong> — Using a different Ability than the last gives you 10% more damage.</li><li><strong>Counter Spell I</strong> — When hit by a Spell, cast Zap at the attacker.</li><li><strong>Magical Slippers</strong> — If you moved this turn, restore 1 MP at the end of your turn.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Fire Spark</div>
+              <div class="ability-summary">110% Fire Spell</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Chill</div>
+              <div class="ability-summary">100% Ice Spell • 50% chance to Chill (3T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Zap</div>
+              <div class="ability-summary">100% Lightning Spell</div>
+              <div class="ability-meta">Range: 4 · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Mana Veil</div>
+              <div class="ability-summary">Grant [SM] RES (3T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 5 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Mystic Heal</div>
+              <div class="ability-summary">100% Healing Spell</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Glass Shield</div>
+              <div class="ability-summary">50% MAG Shield</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div>
+        
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card starter" data-role="Starter" data-search="rogue rog skirmisher starter  scoundrel mastery street tactics stealth flee jump i fast strike quick feet backstab distract pocket sand break away">
+      <div class="card-header">
+        <div class="class-icon"><img src="data:image/png;base64,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2urGAERrVOcbENJYW/U/vL67OZ0vz+/35+eLSGy1XXfNdr3y1jhr3tzfGYXEnAvNITy/HKsAvH85nce55Oy8PZwuLDgXmobl5el8fXtViM4vo2+9NhIkLFMClMrieJz/6e//8bPPPlNK/eKLX/zm3bu+ayt4ySAqkMO8GKOs0dMcBXz7iK7B+VQygASJdaVApdxeb4hoGCcFoAEVAktRW0SJCITUShmtBPMSU0yl8igRUFarHItMVKgggFU65nKZlpzp5nr19m5LzE8vh5fzmHNpvGVJl8v85m779m77+HIgFggSJfSNG+aFiIQQIaWrrtFaffl+p7W63268dQAixrSkLKVovQcplpRzLo2zXeNOwziH0DhbgwNWa4UAQpQilhArxOarDzsA9FZrhd7ZxrlSKFEZ5wh/99d/u/tyP+2mVvvr1ap1um29ZFII2/WqyurXmzWCvN9sP359DwqO5yGVYq3uGxdjBFVNTeKq72gp7371OwTs1s0yB0SspB5A2bYuhbBZb5RSKae/+fGP/+AP/+h0Pndt67TKVJZcQIJkkXPJhZhYChlizrlYY0CBFNAYrbFq//RyOl71bd924xJJsNHaW2MQgQWziCnV9qPGuda5QjkzA6BRKIQombxVm67VSk1L3J8vc0iNs997fbNq/OEyPh8vx2EZ51jBzNMU7jb97br97fvHYQpWKW/tetUBYOOtMuo8zVZprfDrpx1RAcA6VaWUhmUpgp3RrTfbdb/yLpS8P50UwJv7bS78tD97o61WqWQpRSaeUlQa+7aJKdVNkDVaa7UsCwvhrW6URpbQei+KdEavOk9UYs6CWWlljAYQH3b78zQ/7w65kHPGWf1wc/Pqdtu1DRWaQ1Soq/5ktAHJV11bAn/968er605peTrM0xRASaVUSby93qLCSgjq2u7161chJqVU33XGmphKERRyXlLuWocIJPj/kDjktSEhtMJV0wgS52EuRTwfzo23q665TMtxmEIsAKARUUoSMuUcc1piBJDWGCklcYk5O2s2V51guTtfDsNYCjvrHm42P3h4pZR+vz9+8/ySMzXOXrXOGXUZxtabj242p2E+j4t3dgoxxWSUOg7jOIfLOFmlG+++fnopibquqcmmcV6EkIKlqYF9wGmeJXDvXCr8+90h5HJ/fTWFuLuM3lutVC40x6QArld9iPH980udsKUUIIXWOoTILC3q3hr8ly++iGG+v7kmLuMSELDzXiHWpck0h5TLuu9ev7ofhmFallLK9uqKiZaQEDETERWjtJAcQgIpjNbTtIQQ+k0X5pAitb0zWu2+Ofz0n3/66aef1pJBIvrRn/zoZz//+ddffXl3cxNinOdQt0XeGqOwFMpERn0bEFSAhQgRFGJ9WeeSUcIwTau27bt2mOeYcirFO9N5zyyWnLTWRDzMc03sKYBKkYspj0uUUrbOffxw9/puexrHD7uXx/0x5uys1lhlcximZd223399uz+O+/Ola5zVKhNPc0gpI+IcolHYt+5xf5pC6vtGCGbBCLiEBCj71ivEupmbQ1YACjEXjjmnlBtn284dLxMIWLX+PM5Cyk3XIsgP+2PKDIjArBDr4WMhmTnn7IxV75+evVEgIcQsWHinx3mew+KtYZbWqN67GBMC9I2XUh7T+XS5GKVaZ+cYU86rvvVaPR1OxuoYk9Z41TWn5wmU6q6aw/NFMEuQMcSu6QCgUmullH3ff/LJx7/+n/8utXbYmhCj0UorLMTO6DoQeqOlkMRMzOdx7lvftW5eQioUcooxjfMSYtIAvrUpF8GSiIUUKeewJESokRwmysQhJSpEgu+264ft9RzT4XL56vHpMsxaaa0VUUEpG2tAqdNl6hv/+mb9+HI6D3PX+hq+ISZjNAkRl2A1dt49Hs/DHLzT+O2sG2JM1qDRGgFYiJILE3tjBNOSkxTUWDuFuDufP3l1J7bycX8sJTfezctSmOdxnJcgQEnJztpqzpBSMhXiohQCSvTe9a0XgpcQBYvWu2leALEqT8aoq75X6ltX/P54KiRyzvXxlKmElGPMxFzLeKw2c4gIEgCGw4hG9zdtinkaAgr153/6Zx89PNSTJ6Ukos8///xf/+3f3737zfZ6Q4KIKIRUS3YliMZaFkKCXJYQc1KITKLaRqy2IEWVwUKOABBjCSk1zk7zchrnmJM35uaqr7GxTGVeUr3YfvDm1Zu7WwS1O1++edzvjxcWwhldsTzW6qZxCHA6j40zDzfr4zAdh8E567SOKedCWimlYAoBAK7a9ul4Ol3GzjsAaL1b9V3KORd6uN16a5g4xlSIc8mSKBGlXJy1RFRKJmJvrVY4LotS0DjdOkfET4czCKirYAQwShEVRFUdVjGmGJMCkJ138xKEEFpDTfxpxLZxAHKOaV7Cqm/r8LbEOIzzuu9CipWSw8wvp0GC0BXRINkZPYeoEEDA4f3JNsY0+vDh+JN/+Mkf//CHRFQ5qNV70XXdw0dvfvnL/xAsnDbZllI4LmmJCdBaKaTgy7g01vTeTcsspOTCkYs13LdNLuUyzTFnq7VBdZmWYVqUkkaCEEKhCrlcpiXE5Kx6+/p+u+7HeUkpPR4OH3bHEBIitI21SpdSCpFG1VgjpTiep75xr7ebp+PpNEyNM7WrWzA33qach3lpnPVGvd/tj+PSeosgvXOt91A17rr20zqXMsekFQLIislAgBCTlGC0XkJ8vztIEAiwXa2ICxfxtDsKEqjBGg0AKRePGFLKZVaIOeeSs6zYUa3ULIIUwmnNzF3rBPMUglbKIK66tnU+lvz88qIRc8mXaao0WyUUFZJSzCEIKwRL8Z1QL4X3ZhyX59/t7r9/A4Bv334PEetU/d3HK6X81V/+xYfff/Nf//mrzfUGEADYWZtLGYYJusZqPccyh4QKmaUQBAgIMIdQcmEJjbOe9HlccsneKmau5eXTNJ/HkUgUpofbm7evbgvl4+VyOI+H87CEer/qrnEKoMZlrdbWoGA+nibvzO1mtTueh2npW2+0XkIqTN7aGFOIuXXaG/1yHg6X2TljtDIKrTVKKSJiFjHm5/2haRqQQghJLIxSJEpKEQAQoB5HrRQCTDE4Y1GCEGJIS6YsBVbfcGEmJqK6PxE1KSEBJLNirvCTLIRQCokZWKy7NueCiJv11bKEwrw7HFIqTKSUNlprpcd5rlUKt5t1LnQZBmaBqHIpbevGaZEAgJhDefrty/X1GuH/U71Fvfm6rhvncGdMU0pJqf4Tqt+UpVAIqeRpDs5YqyQi5FIQFTFxKUNOuZDV2PeNFLyENE3LscxU2Fv15qObzrsar33aHw6ncyaWEhrnNEIhFswgRCaOsWivNKr9edQKb6+6/ekyhmhNZaULQBAsYkxzSM7ZtnH70/B8uFhrGue0gvWqF0IsMTDLcV5AQdc2zthCpfUmZaJCIUQWgpiZSEoJILrGGq34wkRFgiiJ9oezEAgIzpjvZLJSChFpxJizkDVNyP8LkdwifXjnEdIAAAAASUVORK5CYII=" alt="Rogue"></div>
+        <div class="class-title">
+          <h2>Rogue<span class="starter-badge">STARTER</span></h2>
+          <div class="class-code">ROG</div>
+          <span class="role-badge role-Skirmisher">Skirmisher</span>
+          
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:58%; background:#adff2f;"></div>
+        <span class="bar-value">B-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:65%; background:#7cfc00;"></div>
+        <span class="bar-value">B</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">B-</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B+</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B+</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>4</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Training Dagger &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Scoundrel Mastery</strong> — Gain 5% increased CP and Experience.</li><li><strong>Street Tactics</strong> — Basic Attacks have a 25% chance to inflict Blind.</li><li><strong>Stealth</strong> — Reduce the chance of being targeted.</li><li><strong>Flee</strong> — When hit by an attack, 25% chance to gain +1 MOVE for 1 turn.</li><li><strong>Jump I</strong> — Jump +1</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Fast Strike</div>
+              <div class="ability-summary">100% Attack • Ignore Reactions</div>
+              <div class="ability-meta">Range: W · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Quick Feet</div>
+              <div class="ability-summary">Gain +1 Move (3T)</div>
+              <div class="ability-meta">Range: S · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Backstab</div>
+              <div class="ability-summary">120% ATK • 25% more damage from behind</div>
+              <div class="ability-meta">Range: M · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Distract</div>
+              <div class="ability-summary">The target's next attack must target a different unit</div>
+              <div class="ability-meta">Range: 3 · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Pocket Sand</div>
+              <div class="ability-summary">95% ATK • 50% Blind</div>
+              <div class="ability-meta">Range: 2 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Break Away</div>
+              <div class="ability-summary">Remove Bound • Heal 10% max HP</div>
+              <div class="ability-meta">Range: S · Cost: 6 MP</div>
+            </div>
+        
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Skirmisher" data-search="apothecary apo skirmisher healer ip: +1 hp: +5 apothecary mastery conservation green thumb acid-spray treasure seeker mix i melatonin flask acid flask mix ii mix iii mix iv mix v recycle emergency supplies miracle concoction">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a5a40"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a5a40"/>
+  <rect x="4" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="34" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="16" y="34" width="16" height="4" fill="#22c55e"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e0b890"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e0b890"/>
+  <rect x="10" y="6" width="28" height="8" fill="#1a1510"/>
+  <rect x="10" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="32" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="16" y="10" width="16" height="4" fill="#1a1510"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#22c55e"/>
+  <rect x="22" y="44" width="4" height="4" fill="#90b090"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Apothecary</h2>
+          <div class="class-code">APO</div>
+          <span class="role-badge role-Skirmisher">Skirmisher</span>
+          <span class="role-badge">Healer</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B+</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>4</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Flask &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>IP: +1</li><li>HP: +5</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Apothecary Mastery</strong> — Increase to 6 IP • Items +2 Range • Attacks hitting an ally heal at 50% potency</li><li><strong>Conservation</strong> — Items cost 1 less IP. Minimum of 1</li><li><strong>Green Thumb</strong> — Gain Immunity to Poison and Bleed.</li><li><strong>Acid-Spray</strong> — When dealt damage, 25% chance to Poison adjacent enemies.</li><li><strong>Treasure Seeker</strong> — Find hidden items when you move.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Mix I</div>
+              <div class="ability-summary">Choose an item. It effects two units.</div>
+              <div class="ability-meta">Range: - · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Melatonin Flask</div>
+              <div class="ability-summary">90% Spell Attack • Inflict Sleep (3T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Acid Flask</div>
+              <div class="ability-summary">90% Spell attack • Inflict Poison (3T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Mix II</div>
+              <div class="ability-summary">Choose an item. Reduce Potency by 35%. Gain Cross area</div>
+              <div class="ability-meta">Range: Cross · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Mix III</div>
+              <div class="ability-summary">Choose an item. Its target also gains Quicken.</div>
+              <div class="ability-meta">Range: - · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Mix IV</div>
+              <div class="ability-summary">Choose an item. Its target also suffers Delay.</div>
+              <div class="ability-meta">Range: - · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Mix V</div>
+              <div class="ability-summary">Choose an item. Grants a random [SM] Buff (3T)</div>
+              <div class="ability-meta">Range: - · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Recycle</div>
+              <div class="ability-summary">Gain 2 IP • Gain Regeneration (3T)</div>
+              <div class="ability-meta">Range: Self · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Emergency Supplies</div>
+              <div class="ability-summary">Grant 1 IP to all allies.</div>
+              <div class="ability-meta">Range: All · Cost: 18 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Miracle Concoction</div>
+              <div class="ability-summary">Spend all your IP. Restore 40% per IP spent.</div>
+              <div class="ability-meta">Range: 4 · Cost: -</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Skirmisher" data-search="arcane archer arc skirmisher dps 8 starting mp arcane archer mastery arcane quiver pierce spell echo kite arcane arrow hovering shot sealing arrow snipe blink arcane volley">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a5a40"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a5a40"/>
+  <rect x="4" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="34" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="16" y="34" width="16" height="4" fill="#22c55e"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e0b890"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e0b890"/>
+  <rect x="10" y="6" width="28" height="8" fill="#1a1510"/>
+  <rect x="10" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="32" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="16" y="10" width="16" height="4" fill="#1a1510"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#22c55e"/>
+  <rect x="22" y="44" width="4" height="4" fill="#90b090"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Arcane Archer</h2>
+          <div class="class-code">ARC</div>
+          <span class="role-badge role-Skirmisher">Skirmisher</span>
+          <span class="role-badge">DPS</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:32%; background:#b0c4de;"></div>
+        <span class="bar-value">C-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:32%; background:#b0c4de;"></div>
+        <span class="bar-value">C-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:82%; background:#f0e68c;"></div>
+        <span class="bar-value">A-</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B+</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Longbow &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>8 Starting MP</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Arcane Archer Mastery</strong> — Abilities ignore terrain and collission</li><li><strong>Arcane Quiver</strong> — FIrst ability in combat cost 50% less MP and inflicts Feedback</li><li><strong>Pierce</strong> — Abilities ignore 10% RES.</li><li><strong>Spell Echo</strong> — Abilities hit again for 10% potency</li><li><strong>Kite</strong> — After attacking, move 1 tile.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Arcane Arrow</div>
+              <div class="ability-summary">110% Nuetral Spell</div>
+              <div class="ability-meta">Range: W · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Hovering Shot</div>
+              <div class="ability-summary">120% Attack (Next turn) • 25% Stun</div>
+              <div class="ability-meta">Range: W · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Sealing Arrow</div>
+              <div class="ability-summary">Inflict Feedback</div>
+              <div class="ability-meta">Range: W · Cost: 6 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Snipe</div>
+              <div class="ability-summary">130% Nuetral Spell • Hitting a target with Feedback grants 2 MP</div>
+              <div class="ability-meta">Range: 2026-04-08 00:00:00 · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Blink</div>
+              <div class="ability-summary">Teleport 2 tiles</div>
+              <div class="ability-meta">Range: S · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Arcane Volley</div>
+              <div class="ability-summary">25% Nuetral Spell against 5 targets</div>
+              <div class="ability-meta">Range: W · Cost: 8 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Skirmisher" data-search="assassin asn skirmisher dps atk: +10 assassin mastery isolated critical edge full evasion shadow walk shadow cut expose backstab clone assassinate shadow step">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#1a1a1a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#1a1a1a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#333"/>
+  <rect x="34" y="36" width="10" height="6" fill="#333"/>
+  <rect x="16" y="34" width="16" height="4" fill="#333"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e0b890"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e0b890"/>
+  <rect x="10" y="6" width="28" height="8" fill="#1a1510"/>
+  <rect x="10" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="32" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="16" y="10" width="16" height="4" fill="#1a1510"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#333"/>
+  <rect x="22" y="44" width="4" height="4" fill="#90b090"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Assassin</h2>
+          <div class="class-code">ASN</div>
+          <span class="role-badge role-Skirmisher">Skirmisher</span>
+          <span class="role-badge">DPS</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:32%; background:#b0c4de;"></div>
+        <span class="bar-value">C-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:95%; background:#ffd700;"></div>
+        <span class="bar-value">A+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:32%; background:#b0c4de;"></div>
+        <span class="bar-value">C-</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">C-</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B+</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">A+</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>4</strong></div>
+          <div><span>JUMP</span> <strong>4</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Dual Daggers &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>ATK: +10</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Assassin Mastery</strong> — Critical Hits deal an extra 25% damage.</li><li><strong>Isolated</strong> — Deal 15% more damage to units with no adjacent enemies</li><li><strong>Critical Edge</strong> — Critical Hits inflict Wound (1T)</li><li><strong>Full Evasion</strong> — Evade the first instance of damage, once per combat</li><li><strong>Shadow Walk</strong> — Leave a Clone where you started from (1T)</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Shadow Cut</div>
+              <div class="ability-summary">100% Attack from behind • Create Clone (3T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Expose</div>
+              <div class="ability-summary">60% Attack • Expose (1T) • Can be used from Clone</div>
+              <div class="ability-meta">Range: A · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Backstab</div>
+              <div class="ability-summary">Every clone performs a basic attack on a nearby target</div>
+              <div class="ability-meta">Range: All · Cost: 8 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Clone</div>
+              <div class="ability-summary">Create a clone of yourself (3T) (Instant)</div>
+              <div class="ability-meta">Range: 4 · Cost: 2 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Assassinate</div>
+              <div class="ability-summary">160% Attack • 20% more Crit damage</div>
+              <div class="ability-meta">Range: A · Cost: 18 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Shadow Step</div>
+              <div class="ability-summary">Teleport with a Clone (Instant)</div>
+              <div class="ability-meta">Range: 6 · Cost: 6 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Caster" data-search="bard bar caster support instruments bard mastery loud voice harmonize countersong song of protection song of battle sonic burst song of mind dirge discord mana pulse crescendo articulate">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a2a6a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a2a6a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="34" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="16" y="34" width="16" height="4" fill="#8b5cf6"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e8d0b0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e8d0b0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#2a2030"/>
+  <rect x="10" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="32" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="16" y="10" width="16" height="4" fill="#2a2030"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#8b5cf6"/>
+  <rect x="22" y="44" width="4" height="4" fill="#c0b0e0"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Bard</h2>
+          <div class="class-code">BAR</div>
+          <span class="role-badge role-Caster">Caster</span>
+          <span class="role-badge">Support</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:65%; background:#7cfc00;"></div>
+        <span class="bar-value">B</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:32%; background:#b0c4de;"></div>
+        <span class="bar-value">C-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">B+</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Instrument &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>Instruments</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Bard Mastery</strong> — Whenever you play a Song, trigger its effect immediately.</li><li><strong>Loud Voice</strong> — Gain immunity to Mute and Sleep.</li><li><strong>Harmonize</strong> — When affected by a Song, restore 2 MP after using an Ability.</li><li><strong>Countersong</strong> — When targeted by a Spell, 25% chance to inflict Mute on the caster and gain 1 MP.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Song of Protection</div>
+              <div class="ability-summary">Grant [SM] DEF (Burst - Persist) • Grant [SM] RES (Burst - Persist) • Accent: Grant 5% DMG reduction</div>
+              <div class="ability-meta">Range: S · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Song of Battle</div>
+              <div class="ability-summary">Grant [SM] ATK (Burst - Persist) • Grant Quicken • Accent: Grant 5% Crit chance</div>
+              <div class="ability-meta">Range: S · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Sonic Burst</div>
+              <div class="ability-summary">70% Spell • Push 1 tile</div>
+              <div class="ability-meta">Range: 3 · Cost: 4 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Song of Mind</div>
+              <div class="ability-summary">Restore 5% maximum HP • Grant [SM] MAG (Burst - Persist) • Accent: 1 MP Regen</div>
+              <div class="ability-meta">Range: S · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Dirge</div>
+              <div class="ability-summary">Inflict [SM] ATK Down • Inflict [SM] MAG Down • Accent: 25% Blind</div>
+              <div class="ability-meta">Range: S · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Discord</div>
+              <div class="ability-summary">Inflict [SM] DEF Down • Delay • Accent: 25% Mute</div>
+              <div class="ability-meta">Range: S · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Mana Pulse</div>
+              <div class="ability-summary">Grant 1 MP to allies effected by a Song • Refresh Song duration</div>
+              <div class="ability-meta">Range: All · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Crescendo</div>
+              <div class="ability-summary">Play any Song but grant a [LG] effect.</div>
+              <div class="ability-meta">Range: S · Cost: MP Cost + 6</div>
+            </div><div class="ability">
+              <div class="ability-name">Articulate</div>
+              <div class="ability-summary">Play any Song but gran it it's Accent</div>
+              <div class="ability-meta">Range: S · Cost: MP Cost + 4</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Fighter" data-search="berserker ber fighter dps hp: +10 atk +5 berserker mastery healthy ii rage counterattack heavy swing skull cracker intimidate reckless strike reckoning bloodboil">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#5a2a2a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#5a2a2a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#c0392b"/>
+  <rect x="34" y="36" width="10" height="6" fill="#c0392b"/>
+  <rect x="16" y="34" width="16" height="4" fill="#c0392b"/>
+  <rect x="18" y="28" width="12" height="8" fill="#f0c8a0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#f0c8a0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#4a3020"/>
+  <rect x="10" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="32" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="16" y="10" width="16" height="4" fill="#4a3020"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#c0392b"/>
+  <rect x="22" y="44" width="4" height="4" fill="#a0a8b8"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Berserker</h2>
+          <div class="class-code">BER</div>
+          <span class="role-badge role-Fighter">Fighter</span>
+          <span class="role-badge">DPS</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:88%; background:#ffec8b;"></div>
+        <span class="bar-value">A</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:88%; background:#ffec8b;"></div>
+        <span class="bar-value">A</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">C</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Greataxe &nbsp;·&nbsp; <strong>Armor:</strong> Medium</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>HP: +10</li><li>ATK +5</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Berserker Mastery</strong> — Increase maximum Rage from 5 to 10.</li><li><strong>Healthy II</strong> — Gain 10% increased maximum HP.</li><li><strong>Rage</strong> — Gain 1 Rage when you Basic Attack</li><li><strong>Counterattack</strong> — When hit by a melee attack, 50% chance to attack the attacker</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Heavy Swing</div>
+              <div class="ability-summary">115% Attack • Consume up to 3 Rage, for 6% more per Rage spent.</div>
+              <div class="ability-meta">Range: M · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Skull Cracker</div>
+              <div class="ability-summary">100% Attack • [SM] DEF Down (3T)</div>
+              <div class="ability-meta">Range: M · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Intimidate</div>
+              <div class="ability-summary">Inflict Fear (3T)</div>
+              <div class="ability-meta">Range: 2 · Cost: 6 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Reckless Strike</div>
+              <div class="ability-summary">130% Attack • 20% recoil • Gain 2 Rage</div>
+              <div class="ability-meta">Range: M · Cost: -</div>
+            </div><div class="ability">
+              <div class="ability-name">Reckoning</div>
+              <div class="ability-summary">150% Attack • Consume up to 5 Rage, for 10% more per Rage spent.</div>
+              <div class="ability-meta">Range: M · Cost: 18 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Bloodboil</div>
+              <div class="ability-summary">Lose 8% current HP • Gain 1 Rage (Toggle)</div>
+              <div class="ability-meta">Range: S · Cost: -</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Skirmisher" data-search="bowman bow skirmisher dps range +1 bowman mastery careful aim i overlook countershot jump ii quick shot pin missile field dressing weak spot readying shot multishot">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a5a40"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a5a40"/>
+  <rect x="4" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="34" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="16" y="34" width="16" height="4" fill="#22c55e"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e0b890"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e0b890"/>
+  <rect x="10" y="6" width="28" height="8" fill="#1a1510"/>
+  <rect x="10" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="32" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="16" y="10" width="16" height="4" fill="#1a1510"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#22c55e"/>
+  <rect x="22" y="44" width="4" height="4" fill="#90b090"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Bowman</h2>
+          <div class="class-code">BOW</div>
+          <span class="role-badge role-Skirmisher">Skirmisher</span>
+          <span class="role-badge">DPS</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:58%; background:#adff2f;"></div>
+        <span class="bar-value">B-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:58%; background:#adff2f;"></div>
+        <span class="bar-value">B-</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">B-</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B+</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B+</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>4</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Greatbow &nbsp;·&nbsp; <strong>Armor:</strong> Medium</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>Range +1</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Bowman Mastery</strong> — Increase range of bow attacks by 1 • Basic attacks apply Hunter's Mark (3T)</li><li><strong>Careful Aim I</strong> — Increase Accuracy by 10%</li><li><strong>Overlook</strong> — Deal 5% damage per 3 height, up to 20%</li><li><strong>Countershot</strong> — Counter ranged attacks</li><li><strong>Jump II</strong> — Jump +2</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Quick Shot</div>
+              <div class="ability-summary">100% Attack • Gain Quicken</div>
+              <div class="ability-meta">Range: W · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Pin Missile</div>
+              <div class="ability-summary">110% Attack • 50% Cripple</div>
+              <div class="ability-meta">Range: W · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Field Dressing</div>
+              <div class="ability-summary">Restore 10% HP • Remove Wound</div>
+              <div class="ability-meta">Range: A · Cost: 10 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Weak Spot</div>
+              <div class="ability-summary">120% Attack • Consume Hunter's Mark • Deal 20% more per stack.</div>
+              <div class="ability-meta">Range: W · Cost: 14 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Readying Shot</div>
+              <div class="ability-summary">Cripple self (1T) • Charge for (1T) • 200% Attack end of next turn • +3 Range</div>
+              <div class="ability-meta">Range: 4 · Cost: 18 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Multishot</div>
+              <div class="ability-summary">35% Attack against 3 targets • Applies Hunter's Mark (3T)</div>
+              <div class="ability-meta">Range: W · Cost: 12 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Caster" data-search="bulwark bul caster tank hp: +15 mag: +2.5 bulwark mastery wall bastion psychic deflection forceful step force shield intercept quarter barrier crash null zone iron mind mirror">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a2a6a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a2a6a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="34" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="16" y="34" width="16" height="4" fill="#8b5cf6"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e8d0b0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e8d0b0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#2a2030"/>
+  <rect x="10" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="32" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="16" y="10" width="16" height="4" fill="#2a2030"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#8b5cf6"/>
+  <rect x="22" y="44" width="4" height="4" fill="#c0b0e0"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Bulwark</h2>
+          <div class="class-code">BUL</div>
+          <span class="role-badge role-Caster">Caster</span>
+          <span class="role-badge">Tank</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:95%; background:#ffd700;"></div>
+        <span class="bar-value">A+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Greatshield &nbsp;·&nbsp; <strong>Armor:</strong> Heavy</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>HP: +15</li><li>MAG: +2.5</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Bulwark Mastery</strong> — Heavy Armor gives equal RES and DEF</li><li><strong>Wall</strong> — Enemy units movement will stop at tiles adjacent to this character, unless they start in them</li><li><strong>Bastion</strong> — All attacks against this character count as attacking from the front.</li><li><strong>Psychic Deflection</strong> — When damaged by a Spell, reduce the damage by an additional 20%.</li><li><strong>Forceful Step</strong> — Move through Wall passives</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Force Shield</div>
+              <div class="ability-summary">100% Spell Shield</div>
+              <div class="ability-meta">Range: S · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Intercept</div>
+              <div class="ability-summary">Adjacent allies redirect 30% of damage taken to you</div>
+              <div class="ability-meta">Range: S · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Quarter</div>
+              <div class="ability-summary">Deal 20% of your maximum HP as damage</div>
+              <div class="ability-meta">Range: A · Cost: 8 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Barrier Crash</div>
+              <div class="ability-summary">Consume Spell Shield • Deal damage equal to remaining value</div>
+              <div class="ability-meta">Range: A · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Null Zone</div>
+              <div class="ability-summary">Inflict [LG] MAG Down (Burst) (Persist) 3T • Enemies cannot gain Spell Shield in area</div>
+              <div class="ability-meta">Range: S · Cost: 12 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Iron Mind</div>
+              <div class="ability-summary">Affliction Immunity (3T) • Forced Movement Immunity (3T)</div>
+              <div class="ability-meta">Range: S · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Mirror</div>
+              <div class="ability-summary">Grant Reflect (3T) • The next hostile Spell is reflected back at the attacker</div>
+              <div class="ability-meta">Range: Surround · Cost: 18 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Fighter" data-search="chainbreaker chn fighter bruiser hp: +10 eva: +2.5% chainbreaker mastery sadistic reach barbed chains entangle chain lash snare chain release hookshot stimulation climax">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#3a4a7a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#3a4a7a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#c9a227"/>
+  <rect x="34" y="36" width="10" height="6" fill="#c9a227"/>
+  <rect x="16" y="34" width="16" height="4" fill="#c9a227"/>
+  <rect x="18" y="28" width="12" height="8" fill="#f0c8a0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#f0c8a0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#4a3020"/>
+  <rect x="10" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="32" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="16" y="10" width="16" height="4" fill="#4a3020"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#c9a227"/>
+  <rect x="22" y="44" width="4" height="4" fill="#a0a8b8"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Chainbreaker</h2>
+          <div class="class-code">CHN</div>
+          <span class="role-badge role-Fighter">Fighter</span>
+          <span class="role-badge">Bruiser</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:58%; background:#adff2f;"></div>
+        <span class="bar-value">B-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">C+</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">A</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">A</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Whips &nbsp;·&nbsp; <strong>Armor:</strong> Medium</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>HP: +10</li><li>EVA: +2.5%</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Chainbreaker Mastery</strong> — While Bound gain [LG] DEF</li><li><strong>Sadistic Reach</strong> — 30% less damage • +1 Range</li><li><strong>Barbed Chains</strong> — Push and Pull effects inflict Bleed.</li><li><strong>Entangle</strong> — When hit by a melee attack, have a 50% chance to inflict Slow.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Chain Lash</div>
+              <div class="ability-summary">100% Attack • Pull 1 tile</div>
+              <div class="ability-meta">Range: W · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Snare Chain</div>
+              <div class="ability-summary">110% Attack • 50% Bound</div>
+              <div class="ability-meta">Range: W · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Release</div>
+              <div class="ability-summary">50% Attack (Surround) • Push 1 tile</div>
+              <div class="ability-meta">Range: Surround · Cost: 10 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Hookshot</div>
+              <div class="ability-summary">110% ATK • Pull yourself to target • 50% Bound</div>
+              <div class="ability-meta">Range: 4 · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Stimulation</div>
+              <div class="ability-summary">Bound-self (3T) • Restore 25% maximum HP • Regeneration (3T)</div>
+              <div class="ability-meta">Range: S · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Climax</div>
+              <div class="ability-summary">140% Attack (Burst) • Must be Bound • Remove Bound</div>
+              <div class="ability-meta">Range: S · Cost: 12 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Caster" data-search="curate cur caster healer mag: +5 healing: +5% curate mastery self-redemption timed grace resurrection heal i soothe i restore holy i holy ii holy iii holy iv heal ii ritual">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a2a6a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a2a6a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="34" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="16" y="34" width="16" height="4" fill="#8b5cf6"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e8d0b0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e8d0b0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#2a2030"/>
+  <rect x="10" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="32" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="16" y="10" width="16" height="4" fill="#2a2030"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#8b5cf6"/>
+  <rect x="22" y="44" width="4" height="4" fill="#c0b0e0"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Curate</h2>
+          <div class="class-code">CUR</div>
+          <span class="role-badge role-Caster">Caster</span>
+          <span class="role-badge">Healer</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:88%; background:#ffec8b;"></div>
+        <span class="bar-value">A</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">A+</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Greatstaff &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>MAG: +5</li><li>Healing: +5%</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Curate Mastery</strong> — Increase Healing potency by 10%.</li><li><strong>Self-Redemption</strong> — Restore HP equal to 15% healed.</li><li><strong>Timed Grace</strong> — When you remove a Buff or Affliction, gain 2 MP (once per turn)</li><li><strong>Resurrection</strong> — The first time damage would reduce you to 0 HP, survive with 20% HP.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Heal I</div>
+              <div class="ability-summary">110% Healing Spell</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Soothe I</div>
+              <div class="ability-summary">90% Healing Spell  • Remove 1 Affliction</div>
+              <div class="ability-meta">Range: 4 · Cost: 5 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Restore</div>
+              <div class="ability-summary">Remove 2 Debuffs</div>
+              <div class="ability-meta">Range: 4 · Cost: 5 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Holy I</div>
+              <div class="ability-summary">100% Holy Spell • Heal nearby Ally 10%</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Holy II</div>
+              <div class="ability-summary">38% Holy Spell (Square) • Purge 1 Buff</div>
+              <div class="ability-meta">Range: 4 · Cost: 12 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Holy III</div>
+              <div class="ability-summary">100% Holy Spell • Heal 3 nearby Allies 20%</div>
+              <div class="ability-meta">Range: 4 · Cost: 18 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Holy IV</div>
+              <div class="ability-summary">100% Healing Spell • Healed target detonates next turn for 100% Holy Spell • Burn</div>
+              <div class="ability-meta">Range: 4 · Cost: 24 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Heal II</div>
+              <div class="ability-summary">148% Healing Spell • Grant Barrier (3T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 18 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Ritual</div>
+              <div class="ability-summary">Sacrifice own life to restore 50% of all allies HP</div>
+              <div class="ability-meta">Range: - · Cost: -</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Skirmisher" data-search="dancer dan skirmisher tank eva: +5% dancer mastery slim frame rythem reflex mobile fan dance evade distracting dance pravo shimmy eyes on me final performance">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a5a40"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a5a40"/>
+  <rect x="4" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="34" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="16" y="34" width="16" height="4" fill="#22c55e"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e0b890"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e0b890"/>
+  <rect x="10" y="6" width="28" height="8" fill="#1a1510"/>
+  <rect x="10" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="32" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="16" y="10" width="16" height="4" fill="#1a1510"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#22c55e"/>
+  <rect x="22" y="44" width="4" height="4" fill="#90b090"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Dancer</h2>
+          <div class="class-code">DAN</div>
+          <span class="role-badge role-Skirmisher">Skirmisher</span>
+          <span class="role-badge">Tank</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:32%; background:#b0c4de;"></div>
+        <span class="bar-value">C-</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">B+</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">A+</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B+</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>4</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Fans &nbsp;·&nbsp; <strong>Armor:</strong> Medium</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>EVA: +5%</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Dancer Mastery</strong> — When you Evade; Restore 5% maximum HP</li><li><strong>Slim Frame</strong> — Gain 15% EVA but -10% HP.</li><li><strong>Rythem</strong> — Restore 1 MP whenever you Evade</li><li><strong>Reflex</strong> — Double Evasion against basic attacks</li><li><strong>Mobile</strong> — Gain +1 Move and Jump</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Fan Dance</div>
+              <div class="ability-summary">90% Attack • 50% Blind</div>
+              <div class="ability-meta">Range: M · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Evade</div>
+              <div class="ability-summary">Gain [SM] EVA (3T)</div>
+              <div class="ability-meta">Range: S · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Distracting Dance</div>
+              <div class="ability-summary">Inflict [SM] ATK Down (3T) • Taunt (1T)</div>
+              <div class="ability-meta">Range: 3 · Cost: 6 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Pravo</div>
+              <div class="ability-summary">Grant 1 Move (1T) • Quicken</div>
+              <div class="ability-meta">Range: A · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Shimmy</div>
+              <div class="ability-summary">Dash through an enemy • 50% Attack (Surround) • Ignores Reactions</div>
+              <div class="ability-meta">Range: M · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Eyes on Me</div>
+              <div class="ability-summary">110% Attack • Turn target around • Gain [LG] EVA (3T)</div>
+              <div class="ability-meta">Range: M · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Final Performance</div>
+              <div class="ability-summary">140% Attack • Inflict Slow (3T) • Evade the next instance of damage (1T)</div>
+              <div class="ability-meta">Range: 3 · Cost: 18 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Fighter" data-search="dark knight drk fighter dps hp: +10 mag: +5 dark knight mastery sturdy frame arcane armor vengeance dark slash abyssal strike drain i grasp of darkness drain ii soul cleave execute">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#1a1a2a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#1a1a2a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#4a2080"/>
+  <rect x="34" y="36" width="10" height="6" fill="#4a2080"/>
+  <rect x="16" y="34" width="16" height="4" fill="#4a2080"/>
+  <rect x="18" y="28" width="12" height="8" fill="#f0c8a0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#f0c8a0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#4a3020"/>
+  <rect x="10" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="32" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="16" y="10" width="16" height="4" fill="#4a3020"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#4a2080"/>
+  <rect x="22" y="44" width="4" height="4" fill="#a0a8b8"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Dark Knight</h2>
+          <div class="class-code">DRK</div>
+          <span class="role-badge role-Fighter">Fighter</span>
+          <span class="role-badge">DPS</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:82%; background:#f0e68c;"></div>
+        <span class="bar-value">A-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">C</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Scythe &nbsp;·&nbsp; <strong>Armor:</strong> Heavy</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>HP: +10</li><li>MAG: +5</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Dark Knight Mastery</strong> — When below 50% HP, gain 10% Drain but recieve 20% less healing</li><li><strong>Sturdy Frame</strong> — Take 50% reduced counter damage.</li><li><strong>Arcane Armor</strong> — Gain immunity to Chill and Burn.</li><li><strong>Vengeance</strong> — Once per turn, when hit by an attack, your next Ability deals 10% increased damage.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Dark Slash</div>
+              <div class="ability-summary">100% Attack • 50% Fear</div>
+              <div class="ability-meta">Range: M · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Abyssal Strike</div>
+              <div class="ability-summary">90% Attack • Blackburn</div>
+              <div class="ability-meta">Range: M · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Drain I</div>
+              <div class="ability-summary">100% Spell • 10% Drain</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Grasp of Darkness</div>
+              <div class="ability-summary">Curse (3T) •  50% Bound (3T)</div>
+              <div class="ability-meta">Range: 3 · Cost: 25% HP</div>
+            </div><div class="ability">
+              <div class="ability-name">Drain II</div>
+              <div class="ability-summary">35% Spell (Surround) •  10% Drain</div>
+              <div class="ability-meta">Range: SUR · Cost: 12 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Soul Cleave</div>
+              <div class="ability-summary">55% Attack (Cleave) • Blackburn</div>
+              <div class="ability-meta">Range: A · Cost: 15 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Execute</div>
+              <div class="ability-summary">95% Attack • 1% more damage per 1% HP target is missing</div>
+              <div class="ability-meta">Range: M · Cost: 7 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Caster" data-search="druid drd caster bruiser atk/mag: +2.5 hp:+ 10 druid mastery well-being renewal instinct barkskin mend i vines bear form bear: maul bear: charge bear: endure bear: roar mend ii">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a2a6a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a2a6a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="34" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="16" y="34" width="16" height="4" fill="#8b5cf6"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e8d0b0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e8d0b0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#2a2030"/>
+  <rect x="10" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="32" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="16" y="10" width="16" height="4" fill="#2a2030"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#8b5cf6"/>
+  <rect x="22" y="44" width="4" height="4" fill="#c0b0e0"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Druid</h2>
+          <div class="class-code">DRD</div>
+          <span class="role-badge role-Caster">Caster</span>
+          <span class="role-badge">Bruiser</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:65%; background:#7cfc00;"></div>
+        <span class="bar-value">B</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:65%; background:#7cfc00;"></div>
+        <span class="bar-value">B</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:65%; background:#7cfc00;"></div>
+        <span class="bar-value">B</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Sling &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>ATK/MAG: +2.5</li><li>HP:+ 10</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Druid Mastery</strong> — Transforming into Bear Form restores 10% maximum HP and grants [SM] DEF (3T)</li><li><strong>Well-Being</strong> — Restore 3% maximum HP at end of turn while unaffected by Afflictions.</li><li><strong>Renewal</strong> — When an Affliction is removed, restore 2 MP</li><li><strong>Instinct</strong> — When reduced below 50% HP, restore 30% maximum HP. Once per battle.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Barkskin</div>
+              <div class="ability-summary">Grant [SM] DEF and [SM] RES (3T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Mend I</div>
+              <div class="ability-summary">40% Healing Spell • Grant Regeneration (6T) • Remove 1 Affliction</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Vines</div>
+              <div class="ability-summary">Create Difficult Terrain (3T) (Square)</div>
+              <div class="ability-meta">Range: 3 · Cost: 8 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Bear Form</div>
+              <div class="ability-summary">Gain 20% RES and DEF • Bear Abilities • Non-Bear Abilities remove Bear Form (3T)</div>
+              <div class="ability-meta">Range: S · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Bear: Maul</div>
+              <div class="ability-summary">110% Attack • Push 1 tile</div>
+              <div class="ability-meta">Range: A · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Bear: Charge</div>
+              <div class="ability-summary">80% Attack • Dash 3 tiles • 25% Stun</div>
+              <div class="ability-meta">Range: 3 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Bear: Endure</div>
+              <div class="ability-summary">Gain [LG] DEF (3T) • Restore 10% maximum HP • Remove 1 Affliction</div>
+              <div class="ability-meta">Range: S · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Bear: Roar</div>
+              <div class="ability-summary">Inflict [SM] ATK Down • Taunt (Surround)</div>
+              <div class="ability-meta">Range: Surround · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Mend II</div>
+              <div class="ability-summary">45% Healing Spell (Chain 2)</div>
+              <div class="ability-meta">Range: 6 · Cost: 12 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Caster" data-search="elementalist ele caster dps mag: +5 hp: +10 elementalist mastery elemental resistance mana efficiency absorb elements magma i water i wind i magma ii magma iii water ii water iii wind ii wind iii">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a2a6a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a2a6a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="34" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="16" y="34" width="16" height="4" fill="#8b5cf6"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e8d0b0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e8d0b0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#2a2030"/>
+  <rect x="10" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="32" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="16" y="10" width="16" height="4" fill="#2a2030"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#8b5cf6"/>
+  <rect x="22" y="44" width="4" height="4" fill="#c0b0e0"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Elementalist</h2>
+          <div class="class-code">ELE</div>
+          <span class="role-badge role-Caster">Caster</span>
+          <span class="role-badge">DPS</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:58%; background:#adff2f;"></div>
+        <span class="bar-value">B-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:32%; background:#b0c4de;"></div>
+        <span class="bar-value">C-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:88%; background:#ffec8b;"></div>
+        <span class="bar-value">A</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">A</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Bo-Staff &nbsp;·&nbsp; <strong>Armor:</strong> Medium</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>MAG: +5</li><li>HP: +10</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Elementalist Mastery</strong> — You may cast 2 Spells per turn • -50% Damage • -50% Spell Cost • Cannot use the same spell twice</li><li><strong>Elemental Resistance</strong> — Gain 25% Fire, Ice, and Lightning Resistance.</li><li><strong>Mana Efficiency</strong> — Spell Cost is reduced by 15%</li><li><strong>Absorb Elements</strong> — When hit by a Spell, gain 5% maximum HP</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Magma I</div>
+              <div class="ability-summary">100% Physical Fire Spell • 50% Expose (3T)</div>
+              <div class="ability-meta">Range: 3 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Water I</div>
+              <div class="ability-summary">100% Physical Ice Spell • Push 1</div>
+              <div class="ability-meta">Range: 3 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Wind I</div>
+              <div class="ability-summary">100% Physical Lightning Spell • Gain 1 Move (1T)</div>
+              <div class="ability-meta">Range: 3 · Cost: 6 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Magma II</div>
+              <div class="ability-summary">100% Shield</div>
+              <div class="ability-meta">Range: S · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Magma III</div>
+              <div class="ability-summary">35% Physical FIre Spell (Square) • 50% Expose (3T)</div>
+              <div class="ability-meta">Range: 2 · Cost: 14 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Water II</div>
+              <div class="ability-summary">When Shield expires: Blind enemies (Adjacent) (3T) • Gain [SM] DEF (3T)</div>
+              <div class="ability-meta">Range: S · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Water III</div>
+              <div class="ability-summary">40% Physical Ice Spell (Cone) • Push 1</div>
+              <div class="ability-meta">Range: 2 · Cost: 14 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Wind II</div>
+              <div class="ability-summary">Move up to 3 tiles • Ignore height • Gain [SM] EVA (3T)</div>
+              <div class="ability-meta">Range: S · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Wind III</div>
+              <div class="ability-summary">40% Physical Lightning Spell (Line) • Ignore Reactions • Ignore 20% DEF</div>
+              <div class="ability-meta">Range: 2 · Cost: 14 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Skirmisher" data-search="falconer hun skirmisher bruiser eva: +2.5% atk +5 falconeer mastery freedom trophy hunter counter-all longstrider talon clip falcon dive disengage hunter's rythm coordinated shot hunter's gambit">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a5a40"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a5a40"/>
+  <rect x="4" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="34" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="16" y="34" width="16" height="4" fill="#22c55e"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e0b890"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e0b890"/>
+  <rect x="10" y="6" width="28" height="8" fill="#1a1510"/>
+  <rect x="10" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="32" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="16" y="10" width="16" height="4" fill="#1a1510"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#22c55e"/>
+  <rect x="22" y="44" width="4" height="4" fill="#90b090"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Falconer</h2>
+          <div class="class-code">HUN</div>
+          <span class="role-badge role-Skirmisher">Skirmisher</span>
+          <span class="role-badge">Bruiser</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">C+</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B+</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B+</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Crossbow &nbsp;·&nbsp; <strong>Armor:</strong> Medium</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>EVA: +2.5%</li><li>ATK +5</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Falconeer Mastery</strong> — Your Falcon attacks at the start of your turn for 50% Potency</li><li><strong>Freedom</strong> — Immune to Cripple and Bound</li><li><strong>Trophy Hunter</strong> — After killing an enemy, your next action is a guaranteed critical hit.</li><li><strong>Counter-All</strong> — Counter melee and ranged basic attacks with a 40% potency attack.</li><li><strong>Longstrider</strong> — Ignore difficult terrain.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Talon Clip</div>
+              <div class="ability-summary">100% Attack • 50% Cripple</div>
+              <div class="ability-meta">Range: W · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Falcon Dive</div>
+              <div class="ability-summary">110% Attack • Dash 3 tiles</div>
+              <div class="ability-meta">Range: W · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Disengage</div>
+              <div class="ability-summary">50% Attack • Ignore Reactions • Move 1 tile</div>
+              <div class="ability-meta">Range: W · Cost: 4 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Hunter's Rythm</div>
+              <div class="ability-summary">50% Falcon Attack • Restore 2 MP • Ability gains 5% damage each time it is used</div>
+              <div class="ability-meta">Range: W · Cost: -</div>
+            </div><div class="ability">
+              <div class="ability-name">Coordinated Shot</div>
+              <div class="ability-summary">50% Attack • 50% Falcon Attack • Hunter's Mark</div>
+              <div class="ability-meta">Range: W · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Hunter's Gambit</div>
+              <div class="ability-summary">145% Attack • 25% more damage to targets with Cripple or Bound</div>
+              <div class="ability-meta">Range: W · Cost: 13 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Caster" data-search="geomancer geo caster bruiser hp: +10 atk/mag +2.5 difficult t i difficult t 2 leap geomancer mastery warrior iii defense ii earthen shield mobile difficult terrain i difficult terrain ii leap difficult terrain iii stone-slam landslide seismic cleave">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a2a6a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a2a6a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="34" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="16" y="34" width="16" height="4" fill="#8b5cf6"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e8d0b0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e8d0b0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#2a2030"/>
+  <rect x="10" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="32" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="16" y="10" width="16" height="4" fill="#2a2030"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#8b5cf6"/>
+  <rect x="22" y="44" width="4" height="4" fill="#c0b0e0"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Geomancer</h2>
+          <div class="class-code">GEO</div>
+          <span class="role-badge role-Caster">Caster</span>
+          <span class="role-badge">Bruiser</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:82%; background:#f0e68c;"></div>
+        <span class="bar-value">A-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:58%; background:#adff2f;"></div>
+        <span class="bar-value">B-</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">C+</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Dual Axe &nbsp;·&nbsp; <strong>Armor:</strong> Heavy</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>HP: +10</li><li>ATK/MAG +2.5</li><li>Difficult T I</li><li>Difficult T 2</li><li>Leap</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Geomancer Mastery</strong> — Difficult terrain lasts 1 additional turn • Ignore the effects of difficult terrain.</li><li><strong>Warrior III</strong> — Gain 20% HP • Lose 5% EVA and Accuracy.</li><li><strong>Defense II</strong> — Gain 20% DEF • Lose 10% RES.</li><li><strong>Earthen Shield</strong> — When taking damage, gain a Shield equal to 5% of your HP.</li><li><strong>Mobile</strong> — Gain 1 Move • Gain 1 Jump</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Difficult Terrain I</div>
+              <div class="ability-summary">Create Difficult Terrain (3T) • Units suffer -1 Move</div>
+              <div class="ability-meta">Range: Burst · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Difficult Terrain II</div>
+              <div class="ability-summary">Create Burning Terrain (3T) • Units Burn</div>
+              <div class="ability-meta">Range: Burst · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Leap</div>
+              <div class="ability-summary">Jump 3 tiles • 40% Attack (Surround)</div>
+              <div class="ability-meta">Range: 3 · Cost: 6 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Difficult Terrain III</div>
+              <div class="ability-summary">Create Muddy Terrain (3T) • Units Slow</div>
+              <div class="ability-meta">Range: Burst · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Stone-Slam</div>
+              <div class="ability-summary">90% Attack • Gain [LG] DEF (3T)</div>
+              <div class="ability-meta">Range: 3 · Cost: 9 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Landslide</div>
+              <div class="ability-summary">135% Attack targets in your Difficult Terrain</div>
+              <div class="ability-meta">Range: - · Cost: 12 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Seismic Cleave</div>
+              <div class="ability-summary">Consume Terrain • 140% Attack (Cleave)</div>
+              <div class="ability-meta">Range: A · Cost: 18 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Skirmisher" data-search="jester jes skirmisher support jump: +1 spd: +.25 jester mastery punchline luck i slapstick spotlight jack-in-the-box heckle knife throwing public humiliation misdirection switcheroo">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a5a40"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a5a40"/>
+  <rect x="4" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="34" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="16" y="34" width="16" height="4" fill="#22c55e"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e0b890"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e0b890"/>
+  <rect x="10" y="6" width="28" height="8" fill="#1a1510"/>
+  <rect x="10" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="32" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="16" y="10" width="16" height="4" fill="#1a1510"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#22c55e"/>
+  <rect x="22" y="44" width="4" height="4" fill="#90b090"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Jester</h2>
+          <div class="class-code">JES</div>
+          <span class="role-badge role-Skirmisher">Skirmisher</span>
+          <span class="role-badge">Support</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:58%; background:#adff2f;"></div>
+        <span class="bar-value">B-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">B+</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">A</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">A</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>4</strong></div>
+          <div><span>JUMP</span> <strong>4</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Throwing Daggers &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>Jump: +1</li><li>SPD: +.25</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Jester Mastery</strong> — Switch between a Joy and Sadness Mask • Joy grants 10% damage and 5% crit chance • Sadness inflicts Fear to enemies</li><li><strong>Punchline</strong> — Granting or inflicting a Buff, Debuff, or Affliction restores or deals HP equal to 2% of your maximum HP</li><li><strong>Luck I</strong> — Gain 5% EVA • Gain 5% Critical Hit chance</li><li><strong>Slapstick</strong> — When hit, 25% chance to swap positions with an adjacent unit.</li><li><strong>Spotlight</strong> — After swapping positions, gain +2 MOVE until end of turn.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Jack-in-the-Box</div>
+              <div class="ability-summary">Create a trap (2T) • Push 1 tile • 20% Dark Spell</div>
+              <div class="ability-meta">Range: 3 · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Heckle</div>
+              <div class="ability-summary">Move target 1 tile in a random direction • 50% random Affliction</div>
+              <div class="ability-meta">Range: 3 · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Knife Throwing</div>
+              <div class="ability-summary">25% Attack • Throw 5 daggers • Crits apply a random Affliction (3T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Public Humiliation</div>
+              <div class="ability-summary">20% Dark Spell • Inflict random [SM] Debuff • 10% max HP damage if target has Fear</div>
+              <div class="ability-meta">Range: 3 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Misdirection</div>
+              <div class="ability-summary">Switch places with an ally • 50% Healing Spell</div>
+              <div class="ability-meta">Range: 3 · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Switcheroo</div>
+              <div class="ability-summary">Swap the positions of two units</div>
+              <div class="ability-meta">Range: 3 · Cost: 8 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Fighter" data-search="knight kni fighter tank def: +5% (base) knight mastery defense i group defense i protect protect ii disarm taunt shield slam guard hold the line">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#3a4a6a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#3a4a6a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#c0c8d0"/>
+  <rect x="34" y="36" width="10" height="6" fill="#c0c8d0"/>
+  <rect x="16" y="34" width="16" height="4" fill="#c0c8d0"/>
+  <rect x="18" y="28" width="12" height="8" fill="#f0c8a0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#f0c8a0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#4a3020"/>
+  <rect x="10" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="32" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="16" y="10" width="16" height="4" fill="#4a3020"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#c0c8d0"/>
+  <rect x="22" y="44" width="4" height="4" fill="#a0a8b8"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Knight</h2>
+          <div class="class-code">KNI</div>
+          <span class="role-badge role-Fighter">Fighter</span>
+          <span class="role-badge">Tank</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:88%; background:#ffec8b;"></div>
+        <span class="bar-value">A</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:82%; background:#f0e68c;"></div>
+        <span class="bar-value">A-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">C+</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Sword and Shield &nbsp;·&nbsp; <strong>Armor:</strong> Heavy</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>DEF: +5% (Base)</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Knight Mastery</strong> — Gain 5% DEF; Gain additional 15% DEF while adjacent to any ally.</li><li><strong>Defense I</strong> — Gain 10% DEF</li><li><strong>Group Defense I</strong> — Adjacent allies gain 5% DEF</li><li><strong>Protect</strong> — 25% chance to redirect a single-target attack against an adjacent ally to yourself.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Protect II</div>
+              <div class="ability-summary">Redirect the next single‑target attack against an adjacent ally to yourself (Response)</div>
+              <div class="ability-meta">Range: S · Cost: -</div>
+            </div><div class="ability">
+              <div class="ability-name">Disarm</div>
+              <div class="ability-summary">100% Attack • Target cannot basic attack (1T)</div>
+              <div class="ability-meta">Range: W · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Taunt</div>
+              <div class="ability-summary">Force the target to attack you on its next action.</div>
+              <div class="ability-meta">Range: 3 · Cost: 6 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Shield Slam</div>
+              <div class="ability-summary">110% Attack • 50% Stagger (3T) • Push 1</div>
+              <div class="ability-meta">Range: A · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Guard</div>
+              <div class="ability-summary">When an enemy first enters your melee range each turn, immediately hit it for 50% Attack (3T)</div>
+              <div class="ability-meta">Range: S · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Hold the Line</div>
+              <div class="ability-summary">Gain [LG] DEF • Immune to Push and Pull • Enemies cannot move through you (1T)</div>
+              <div class="ability-meta">Range: S · Cost: 14 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Skirmisher" data-search="lancer lan skirmisher dps atk: +3 jump: +1 lancer mastery dash attack chain attacks height counter jump iii skewer leap lance throw cross slash dragon cleave heavens tear">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a5a40"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a5a40"/>
+  <rect x="4" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="34" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="16" y="34" width="16" height="4" fill="#22c55e"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e0b890"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e0b890"/>
+  <rect x="10" y="6" width="28" height="8" fill="#1a1510"/>
+  <rect x="10" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="32" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="16" y="10" width="16" height="4" fill="#1a1510"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#22c55e"/>
+  <rect x="22" y="44" width="4" height="4" fill="#90b090"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Lancer</h2>
+          <div class="class-code">LAN</div>
+          <span class="role-badge role-Skirmisher">Skirmisher</span>
+          <span class="role-badge">DPS</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:65%; background:#7cfc00;"></div>
+        <span class="bar-value">B</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:82%; background:#f0e68c;"></div>
+        <span class="bar-value">A-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:32%; background:#b0c4de;"></div>
+        <span class="bar-value">C-</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">C</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">A</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>4</strong></div>
+          <div><span>JUMP</span> <strong>4</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Lance &nbsp;·&nbsp; <strong>Armor:</strong> Heavy</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>ATK: +3</li><li>JUMP: +1</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Lancer Mastery</strong> — Lance attacks made at a distance of 2 deal 20% more damage</li><li><strong>Dash Attack</strong> — Basic attacks made after moving 3 tiles deal 15% more damage</li><li><strong>Chain Attacks</strong> — Defeating an enemy with a basic attack, grants +2 move and an extra attack at 50% potency next turn</li><li><strong>Height Counter</strong> — When recieving an attack from a lower elevation, counter with 100% potency</li><li><strong>Jump III</strong> — Gain +3 Jump</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Skewer</div>
+              <div class="ability-summary">60% Attack • Both Lance and Lancer Attack</div>
+              <div class="ability-meta">Range: A · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Leap</div>
+              <div class="ability-summary">Recall Lance • Jump 4 tiles • 80% Attack (Adjacent)</div>
+              <div class="ability-meta">Range: 4 · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Lance Throw</div>
+              <div class="ability-summary">100% Attack • Throw Lance to location</div>
+              <div class="ability-meta">Range: 6 · Cost: 8 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Cross Slash</div>
+              <div class="ability-summary">Recall Lance • Jump 4 tiles • 60% Attack (Cross) to targets under you as you jump</div>
+              <div class="ability-meta">Range: 4 · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Dragon Cleave</div>
+              <div class="ability-summary">Lance and Lancer dash 3 tiles • 70% Fire Attack (Cleave) to targets near the dash</div>
+              <div class="ability-meta">Range: 3 · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Heavens Tear</div>
+              <div class="ability-summary">Recall Lance • 100% Lightning Attack • Gain up to 100% more potency depending on the height advantage</div>
+              <div class="ability-meta">Range: 3 · Cost: 14 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Fighter" data-search="monk mon fighter bruiser hp: +15 atk +2.5 monk mastery countercentric iron will preimptive counter font flurry meditate delayed palm rising dragon tranquil punch chi burst">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#3a4a7a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#3a4a7a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#c9a227"/>
+  <rect x="34" y="36" width="10" height="6" fill="#c9a227"/>
+  <rect x="16" y="34" width="16" height="4" fill="#c9a227"/>
+  <rect x="18" y="28" width="12" height="8" fill="#f0c8a0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#f0c8a0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#4a3020"/>
+  <rect x="10" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="32" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="16" y="10" width="16" height="4" fill="#4a3020"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#c9a227"/>
+  <rect x="22" y="44" width="4" height="4" fill="#a0a8b8"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Monk</h2>
+          <div class="class-code">MON</div>
+          <span class="role-badge role-Fighter">Fighter</span>
+          <span class="role-badge">Bruiser</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:95%; background:#ffd700;"></div>
+        <span class="bar-value">A+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:88%; background:#ffec8b;"></div>
+        <span class="bar-value">A</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:32%; background:#b0c4de;"></div>
+        <span class="bar-value">C-</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">C-</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B+</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Unarmed &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>HP: +15</li><li>ATK +2.5</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Monk Mastery</strong> — Unarmed attacks do not trigger Reactions • Reactions ignore DEF</li><li><strong>Countercentric</strong> — Lower the chance of Reactions by 25% • Increase self-Reaction rate by 25%</li><li><strong>Iron Will</strong> — Gain immunity to Fear and Stagger.</li><li><strong>Preimptive Counter</strong> — When targeted with a melee attack, 50% chance to counter before recieving damage at 50% potency.</li><li><strong>Font</strong> — Restore HP equal to 1% of your maximum HP per tile traveled.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Flurry</div>
+              <div class="ability-summary">37% Attack • 3-hits</div>
+              <div class="ability-meta">Range: A · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Meditate</div>
+              <div class="ability-summary">Restore 10% Maximum HP • Counters deal 25% more damage (3T)</div>
+              <div class="ability-meta">Range: S · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Delayed Palm</div>
+              <div class="ability-summary">100% Attack • Delay • 50% Stagger</div>
+              <div class="ability-meta">Range: A · Cost: 11 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Rising Dragon</div>
+              <div class="ability-summary">40% Attack • 3-hits • Move behind the target</div>
+              <div class="ability-meta">Range: A · Cost: 9 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Tranquil Punch</div>
+              <div class="ability-summary">125% Attack • 50% Mute</div>
+              <div class="ability-meta">Range: 4 · Cost: 12 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Chi Burst</div>
+              <div class="ability-summary">40% Attack (Surround) • Push 1 tile • Restore 5% maximum HP per target hit</div>
+              <div class="ability-meta">Range: A · Cost: 10 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Caster" data-search="necromancer nec caster bruiser mag: +5 mpr. +.5 necromancer mastery spell drain malignant weakness acid blood summon skeleton dark i summon zombie dark advance dark ii dark iii dark iv unholybrand">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#1a2a1a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#1a2a1a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#4a7c59"/>
+  <rect x="34" y="36" width="10" height="6" fill="#4a7c59"/>
+  <rect x="16" y="34" width="16" height="4" fill="#4a7c59"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e8d0b0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e8d0b0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#2a2030"/>
+  <rect x="10" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="32" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="16" y="10" width="16" height="4" fill="#2a2030"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#4a7c59"/>
+  <rect x="22" y="44" width="4" height="4" fill="#c0b0e0"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Necromancer</h2>
+          <div class="class-code">NEC</div>
+          <span class="role-badge role-Caster">Caster</span>
+          <span class="role-badge">Bruiser</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:32%; background:#b0c4de;"></div>
+        <span class="bar-value">C-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:88%; background:#ffec8b;"></div>
+        <span class="bar-value">A</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">A</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">A</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Lantern &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>Mag: +5</li><li>MPR. +.5</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Necromancer Mastery</strong> — Take 10% less damage when near a Summon • Summons explode on death for 5% maximum health damage</li><li><strong>Spell Drain</strong> — Gain 10% Drain from Spells.</li><li><strong>Malignant Weakness</strong> — Enemies suffering 2 or more Afflictions take 15% increased damage from your Spells.</li><li><strong>Acid Blood</strong> — When hit by a melee attack, inflict Corruption (3T)</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Summon Skeleton</div>
+              <div class="ability-summary">Summon a Skeleton (2 max) • Skeletons have 25% chance to intercept adjacent attacks • Instant</div>
+              <div class="ability-meta">Range: 4 · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Dark I</div>
+              <div class="ability-summary">90% Dark Spell • Inflict Corruption (3T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Summon Zombie</div>
+              <div class="ability-summary">Summon a Zombie (2 max) • Zombies deal 20% extra Dark damage • Instant</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Dark Advance</div>
+              <div class="ability-summary">All summons move 2 • Heal all summons 25% of their health</div>
+              <div class="ability-meta">Range: All · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Dark II</div>
+              <div class="ability-summary">130% Dark Spell • Deal 20% more damage to Corrupted targets</div>
+              <div class="ability-meta">Range: 4 · Cost: 12 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Dark III</div>
+              <div class="ability-summary">50% Dark Spell (Cross) • Corruption (3T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 18 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Dark IV</div>
+              <div class="ability-summary">140% Dark Spell • Consume Corruption • Deal 15% damage per Corruption consumed</div>
+              <div class="ability-meta">Range: All · Cost: 24 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Unholybrand</div>
+              <div class="ability-summary">Grant Unholy Weapon (5T) • Minions gain Unholy Weapon (1T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 8 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Fighter" data-search="paladin pal fighter healer hp: +10 atk/mag +2.5 paladin mastery divine aura angelic flurry reflex heals holybrand smite shield of faith holy charge soothe ii smite ii holy fury">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#f0e8d0"/>
+  <rect x="8" y="34" width="32" height="8" fill="#f0e8d0"/>
+  <rect x="4" y="36" width="10" height="6" fill="#d4af37"/>
+  <rect x="34" y="36" width="10" height="6" fill="#d4af37"/>
+  <rect x="16" y="34" width="16" height="4" fill="#d4af37"/>
+  <rect x="18" y="28" width="12" height="8" fill="#f0c8a0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#f0c8a0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#4a3020"/>
+  <rect x="10" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="32" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="16" y="10" width="16" height="4" fill="#4a3020"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#d4af37"/>
+  <rect x="22" y="44" width="4" height="4" fill="#a0a8b8"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Paladin</h2>
+          <div class="class-code">PAL</div>
+          <span class="role-badge role-Fighter">Fighter</span>
+          <span class="role-badge">Healer</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:82%; background:#f0e68c;"></div>
+        <span class="bar-value">A-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:58%; background:#adff2f;"></div>
+        <span class="bar-value">B-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">B-</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Dual Longsword &nbsp;·&nbsp; <strong>Armor:</strong> Heavy</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>HP: +10</li><li>ATK/MAG +2.5</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Paladin Mastery</strong> — After taking damage, restore HP equal to 4% of your maximum HP.</li><li><strong>Divine Aura</strong> — Increase healing done to allies within 2 tiles by 10%.</li><li><strong>Angelic Flurry</strong> — When using an elemental melee attack, deal an extra 10% of the same element as extra damage.</li><li><strong>Reflex Heals</strong> — When an adjacent ally is attacked, restore HP equal to 10% of your maximum HP before damage is dealt.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Holybrand</div>
+              <div class="ability-summary">Gain Holy Weapon (5T) (Instant)</div>
+              <div class="ability-meta">Range: S · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Smite</div>
+              <div class="ability-summary">100% Attack • Grant yourself a Shield equal to 25% of damage dealt</div>
+              <div class="ability-meta">Range: 3 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Shield of Faith</div>
+              <div class="ability-summary">You and adjacent allies take 20% less damage (1T)</div>
+              <div class="ability-meta">Range: - · Cost: 6 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Holy Charge</div>
+              <div class="ability-summary">Move 6 tiles • 140% Holy Attack</div>
+              <div class="ability-meta">Range: 6 · Cost: 20 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Soothe II</div>
+              <div class="ability-summary">90% Healing Spell • Remove 2 Afflictions</div>
+              <div class="ability-meta">Range: 3 · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Smite II</div>
+              <div class="ability-summary">120% Holy Spell • Remove 1 Buff</div>
+              <div class="ability-meta">Range: 3 · Cost: 12 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Holy Fury</div>
+              <div class="ability-summary">Gain [LG] ATK (3T) (Instant)</div>
+              <div class="ability-meta">Range: S · Cost: 15% HP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Caster" data-search="psion psi caster support mpr: +.5 mag: +5 psionic mastery magic boost iii clairvoyance psychic rebound mind bolt push pull grip kinetic wave thought shift barrier">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a2a6a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a2a6a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="34" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="16" y="34" width="16" height="4" fill="#8b5cf6"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e8d0b0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e8d0b0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#2a2030"/>
+  <rect x="10" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="32" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="16" y="10" width="16" height="4" fill="#2a2030"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#8b5cf6"/>
+  <rect x="22" y="44" width="4" height="4" fill="#c0b0e0"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Psion</h2>
+          <div class="class-code">PSI</div>
+          <span class="role-badge role-Caster">Caster</span>
+          <span class="role-badge">Support</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:82%; background:#f0e68c;"></div>
+        <span class="bar-value">A-</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">A</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Crystal &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>MPR: +.5</li><li>MAG: +5</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Psionic Mastery</strong> — Target that collide with terrain take 10% Spell damage</li><li><strong>Magic Boost III</strong> — Spells deal 10% more damage.</li><li><strong>Clairvoyance</strong> — Gain 5% Accuracy • All sides count as the front.</li><li><strong>Psychic Rebound</strong> — When pushed or pulled by an enemy, apply the opposite movement to them.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Mind Bolt</div>
+              <div class="ability-summary">110% Spell damage</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Push</div>
+              <div class="ability-summary">Push 1</div>
+              <div class="ability-meta">Range: 4 · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Pull</div>
+              <div class="ability-summary">Pull 1</div>
+              <div class="ability-meta">Range: 4 · Cost: 4 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Grip</div>
+              <div class="ability-summary">110% Spell damage • 50% Bound</div>
+              <div class="ability-meta">Range: 4 · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Kinetic Wave</div>
+              <div class="ability-summary">50% Spell damage (Burst) • Push 1 from center</div>
+              <div class="ability-meta">Range: 3 · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Thought Shift</div>
+              <div class="ability-summary">Move an ally up to 3 tiles</div>
+              <div class="ability-meta">Range: 4 · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Barrier</div>
+              <div class="ability-summary">Take 33% less damage (1T) • Push 1 tile when hit by a melee attack</div>
+              <div class="ability-meta">Range: 4 · Cost: 14 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Caster" data-search="sorcerer sor caster dps mag: +10 sorcerer mastery spell range magic boost counter spell ii fire i lightning i ice i fire ii fire iii fire iv ice ii ice iii ice iv lightning ii lightning iii lightning iv">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a1a4a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a1a4a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#e74c3c"/>
+  <rect x="34" y="36" width="10" height="6" fill="#e74c3c"/>
+  <rect x="16" y="34" width="16" height="4" fill="#e74c3c"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e8d0b0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e8d0b0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#2a2030"/>
+  <rect x="10" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="32" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="16" y="10" width="16" height="4" fill="#2a2030"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#e74c3c"/>
+  <rect x="22" y="44" width="4" height="4" fill="#c0b0e0"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Sorcerer</h2>
+          <div class="class-code">SOR</div>
+          <span class="role-badge role-Caster">Caster</span>
+          <span class="role-badge">DPS</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:88%; background:#ffec8b;"></div>
+        <span class="bar-value">A</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">A</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B+</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Staff &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>MAG: +10</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Sorcerer Mastery</strong> — Area spells deal 15% more damage</li><li><strong>Spell Range</strong> — Spells gain +1 Range</li><li><strong>Magic Boost</strong> — Increase Spell damage by 15% • Increase Spell costs by 15%.</li><li><strong>Counter Spell II</strong> — When hit by a spell, counter with Fire I.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Fire I</div>
+              <div class="ability-summary">110% Fire Spell</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Lightning I</div>
+              <div class="ability-summary">30% x3 Lightning Spell • Quicken</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Ice I</div>
+              <div class="ability-summary">80% Ice Spell • Chill</div>
+              <div class="ability-meta">Range: 4 · Cost: 4 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Fire II</div>
+              <div class="ability-summary">45% Fire Spell (Cross)</div>
+              <div class="ability-meta">Range: 3 · Cost: 12 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Fire III</div>
+              <div class="ability-summary">140% Fire Spell • Burn</div>
+              <div class="ability-meta">Range: 4 · Cost: 18 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Fire IV</div>
+              <div class="ability-summary">160% Fire Spell • Burn • Infuse</div>
+              <div class="ability-meta">Range: 4 · Cost: 24 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Ice II</div>
+              <div class="ability-summary">33% Ice Spell (Cone) • Chill</div>
+              <div class="ability-meta">Range: 3 · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Ice III</div>
+              <div class="ability-summary">29% Ice Spell (Square) • 50% Slow</div>
+              <div class="ability-meta">Range: 4 · Cost: 12 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Ice IV</div>
+              <div class="ability-summary">25% Ice Spell (Map) • Slow • Chill</div>
+              <div class="ability-meta">Range: - · Cost: 16 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Lightning II</div>
+              <div class="ability-summary">20% x3 Lightning Spell (Chain 1) • Quicken</div>
+              <div class="ability-meta">Range: 4 · Cost: 12 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Lightning III</div>
+              <div class="ability-summary">23% x3 Lightning Spell (Chain 2) • Quicken</div>
+              <div class="ability-meta">Range: 4 · Cost: 18 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Lightning IV</div>
+              <div class="ability-summary">36% Lightning Spell (Square) • Haste (3T) to allies in the area</div>
+              <div class="ability-meta">Range: 3 · Cost: 24 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Caster" data-search="spellblade spb caster bruiser atk: +5 mag: +5 spellblade mastery spellweaver resistance i arcane absorbtion tri-cast spell flee arcanebrand flamebrand frostbrand stormbrand unleash">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a2a6a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a2a6a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="34" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="16" y="34" width="16" height="4" fill="#8b5cf6"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e8d0b0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e8d0b0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#2a2030"/>
+  <rect x="10" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="32" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="16" y="10" width="16" height="4" fill="#2a2030"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#8b5cf6"/>
+  <rect x="22" y="44" width="4" height="4" fill="#c0b0e0"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Spellblade</h2>
+          <div class="class-code">SPB</div>
+          <span class="role-badge role-Caster">Caster</span>
+          <span class="role-badge">Bruiser</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:82%; background:#f0e68c;"></div>
+        <span class="bar-value">A-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">B-</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B+</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B+</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Rapier &nbsp;·&nbsp; <strong>Armor:</strong> Medium</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>ATK: +5</li><li>MAG: +5</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Spellblade Mastery</strong> — Casting a Fire, Ice, or Lightning Spell grants that Elemental Stance (3T)</li><li><strong>Spellweaver</strong> — Your first attack each turn deals 10% more damage if you cast a spell last turn</li><li><strong>Resistance I</strong> — Gain 10% RES</li><li><strong>Arcane Absorbtion</strong> — When hit by a spell, gain 20% Spell Shield</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Tri-Cast</div>
+              <div class="ability-summary">110% Spell • Choose fire, ice, or lightning</div>
+              <div class="ability-meta">Range: 3 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Spell Flee</div>
+              <div class="ability-summary">65% Spell Shield • Teleport 2</div>
+              <div class="ability-meta">Range: 2 · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Arcanebrand</div>
+              <div class="ability-summary">100% Nuetral Attack</div>
+              <div class="ability-meta">Range: W · Cost: 4 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Flamebrand</div>
+              <div class="ability-summary">120% Fire Attack</div>
+              <div class="ability-meta">Range: W · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Frostbrand</div>
+              <div class="ability-summary">110% Ice Attack • Inflict Delay</div>
+              <div class="ability-meta">Range: W · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Stormbrand</div>
+              <div class="ability-summary">110% Lightning Attack • Gain Quicken</div>
+              <div class="ability-meta">Range: W · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Unleash</div>
+              <div class="ability-summary">140% Spell • Fire: Restore 25% maximum HP • Ice: Gain [LG] DEF (3T) • Lightning: Gain 2 Move (1T)</div>
+              <div class="ability-meta">Range: W · Cost: 18 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Caster" data-search="summoner smn caster dps mana regen: 1 summoner mastery companion health companion reach companion revenge still font summon: kresnik command: attack holy fire summon: perun summon: veles command: retreat command: special">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a2a6a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a2a6a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="34" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="16" y="34" width="16" height="4" fill="#8b5cf6"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e8d0b0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e8d0b0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#2a2030"/>
+  <rect x="10" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="32" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="16" y="10" width="16" height="4" fill="#2a2030"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#8b5cf6"/>
+  <rect x="22" y="44" width="4" height="4" fill="#c0b0e0"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Summoner</h2>
+          <div class="class-code">SMN</div>
+          <span class="role-badge role-Caster">Caster</span>
+          <span class="role-badge">DPS</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:32%; background:#b0c4de;"></div>
+        <span class="bar-value">C-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:88%; background:#ffec8b;"></div>
+        <span class="bar-value">A</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">A+</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Spellbook &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>Mana Regen: 1</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Summoner Mastery</strong> — Start combat with Kresnik • Summons only lose 25% Attributes when outside of 10 tiles</li><li><strong>Companion Health</strong> — Companions gain Regeneration</li><li><strong>Companion Reach</strong> — Companions gain +1 Range</li><li><strong>Companion Revenge</strong> — When dealt damage, your Companion performs a basic attack on the nearest enemy</li><li><strong>Still Font</strong> — When not moving, gain 2 MP at the end of your turn.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Summon: Kresnik</div>
+              <div class="ability-summary">Attack: 100% Fire Spell • Special: 70% Fire Spell (Cone) • Retreat: 80% Fire Spell (Surround)</div>
+              <div class="ability-meta">Range: A · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Command: Attack</div>
+              <div class="ability-summary">Command your Summon to use its Attack</div>
+              <div class="ability-meta">Range: - · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Holy Fire</div>
+              <div class="ability-summary">110% Holy Spell • 50% Burn</div>
+              <div class="ability-meta">Range: 4 · Cost: 8 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Summon: Perun</div>
+              <div class="ability-summary">Attack: 80% Lightning Spell 50% Stagger • Special: 130% Lightning Spell • Retreat: 40% Lightning Spell (Chain)</div>
+              <div class="ability-meta">Range: A · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Summon: Veles</div>
+              <div class="ability-summary">Attack: 80% Healing Spell • Special: 40% Healing Spell (Remove 1 Affliction) (Cross) • Retreat: 30% Shield and Spell Shield</div>
+              <div class="ability-meta">Range: A · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Command: Retreat</div>
+              <div class="ability-summary">Recall Companion • Command your Summon to use its Retreat Ability</div>
+              <div class="ability-meta">Range: - · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Command: Special</div>
+              <div class="ability-summary">Command your Summon to use its Special Ability</div>
+              <div class="ability-meta">Range: - · Cost: 10 mp</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Skirmisher" data-search="thief thf skirmisher support move: +1 eva: +2.5% thief mastery klepto dodge i counter-steal slip wet blade steal: ip roll steal: mana steal: soul steal: buff throw bomb">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a5a40"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a5a40"/>
+  <rect x="4" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="34" y="36" width="10" height="6" fill="#22c55e"/>
+  <rect x="16" y="34" width="16" height="4" fill="#22c55e"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e0b890"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e0b890"/>
+  <rect x="10" y="6" width="28" height="8" fill="#1a1510"/>
+  <rect x="10" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="32" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="16" y="10" width="16" height="4" fill="#1a1510"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#22c55e"/>
+  <rect x="22" y="44" width="4" height="4" fill="#90b090"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Thief</h2>
+          <div class="class-code">THF</div>
+          <span class="role-badge role-Skirmisher">Skirmisher</span>
+          <span class="role-badge">Support</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:65%; background:#7cfc00;"></div>
+        <span class="bar-value">B</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">C-</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">A</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">A</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>4</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Dagger &nbsp;·&nbsp; <strong>Armor:</strong> Medium</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>Move: +1</li><li>EVA: +2.5%</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Thief Mastery</strong> — Increase Steal chance • Gain Gold whenever damage is dealt</li><li><strong>Klepto</strong> — After stealing, Gain [SM] ATK  (3T)</li><li><strong>Dodge I</strong> — Increase EVA by 10%.</li><li><strong>Counter-Steal</strong> — When hit by an attack, 25% chance to steal 1 random Buff</li><li><strong>Slip</strong> — Move through enemy units</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Wet Blade</div>
+              <div class="ability-summary">100% Attack • 50% Poison (3T)</div>
+              <div class="ability-meta">Range: W · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Steal: IP</div>
+              <div class="ability-summary">60% Attack • Steal 1 IP</div>
+              <div class="ability-meta">Range: M · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Roll</div>
+              <div class="ability-summary">Gain 2 Move (1T) • Ignore unit collision (1T)</div>
+              <div class="ability-meta">Range: S · Cost: 6 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Steal: Mana</div>
+              <div class="ability-summary">Steal 3 MP</div>
+              <div class="ability-meta">Range: A · Cost: -</div>
+            </div><div class="ability">
+              <div class="ability-name">Steal: Soul</div>
+              <div class="ability-summary">80% Attack • Steal 5% of all Attributes (3T)</div>
+              <div class="ability-meta">Range: A · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Steal: Buff</div>
+              <div class="ability-summary">130% Attack • Steal 1 random Buff</div>
+              <div class="ability-meta">Range: A · Cost: 12 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Throw Bomb</div>
+              <div class="ability-summary">Choose a Bomb Item. Gain +2 range and 35% potency.</div>
+              <div class="ability-meta">Range: A · Cost: 12 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Skirmisher" data-search="vampire vam skirmisher dps 2.5% drain spd: +.5 vampire mastery nightwalker crimson overflow siphon reflex bat form wet claws bloodrush scarlet fang feast self-consumption exsanguinate">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#1a0a1a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#1a0a1a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#8b0000"/>
+  <rect x="34" y="36" width="10" height="6" fill="#8b0000"/>
+  <rect x="16" y="34" width="16" height="4" fill="#8b0000"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e0b890"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e0b890"/>
+  <rect x="10" y="6" width="28" height="8" fill="#1a1510"/>
+  <rect x="10" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="32" y="12" width="6" height="12" fill="#1a1510"/>
+  <rect x="16" y="10" width="16" height="4" fill="#1a1510"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#8b0000"/>
+  <rect x="22" y="44" width="4" height="4" fill="#90b090"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Vampire</h2>
+          <div class="class-code">VAM</div>
+          <span class="role-badge role-Skirmisher">Skirmisher</span>
+          <span class="role-badge">DPS</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:65%; background:#7cfc00;"></div>
+        <span class="bar-value">B</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:72%; background:#90ee90;"></div>
+        <span class="bar-value">B+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:58%; background:#adff2f;"></div>
+        <span class="bar-value">B-</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">C</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">A-</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Claws &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>2.5% Drain</li><li>Spd: +.5</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Vampire Mastery</strong> — Gain 10% Drain • Bleeds applied by this unit deal twice as much damage</li><li><strong>Nightwalker</strong> — Gain 15% EVA while above 75% HP.</li><li><strong>Crimson Overflow</strong> — Overhealing from Drain becomes a Shield.</li><li><strong>Siphon Reflex</strong> — When hit by a melee attack, counter with 40% Attack and Drain</li><li><strong>Bat Form</strong> — Teleport</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Wet Claws</div>
+              <div class="ability-summary">100% Dark Attack • 5% Drain • Gain 5% Shield</div>
+              <div class="ability-meta">Range: M · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Bloodrush</div>
+              <div class="ability-summary">Dash 4 through the targets • Inflict Bleed (3T)</div>
+              <div class="ability-meta">Range: M · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Scarlet Fang</div>
+              <div class="ability-summary">100% Attack • Inflict Bleed (3T)</div>
+              <div class="ability-meta">Range: M · Cost: 8 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Feast</div>
+              <div class="ability-summary">Teleport to target • Trigger Bleed and extend it (5T) • Restore 5% maximum HP</div>
+              <div class="ability-meta">Range: 5 · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Self-Consumption</div>
+              <div class="ability-summary">Gain 6 MP • Self-Wound (3T)</div>
+              <div class="ability-meta">Range: S · Cost: 25% HP</div>
+            </div><div class="ability">
+              <div class="ability-name">Exsanguinate</div>
+              <div class="ability-summary">140% Dark Spell • Consume Bleed • Deal 15% more damage per turn of Bleed left</div>
+              <div class="ability-meta">Range: 2 · Cost: 18 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Fighter" data-search="weapon master wpm fighter dps atk: +10 weapon mastery precision i attack boost riposte combat momentum twin slash whirlwind prepare jagged edges 1000 cuts weapon swap">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#3a4a7a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#3a4a7a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#c9a227"/>
+  <rect x="34" y="36" width="10" height="6" fill="#c9a227"/>
+  <rect x="16" y="34" width="16" height="4" fill="#c9a227"/>
+  <rect x="18" y="28" width="12" height="8" fill="#f0c8a0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#f0c8a0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#4a3020"/>
+  <rect x="10" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="32" y="12" width="6" height="12" fill="#4a3020"/>
+  <rect x="16" y="10" width="16" height="4" fill="#4a3020"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#c9a227"/>
+  <rect x="22" y="44" width="4" height="4" fill="#a0a8b8"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Weapon Master</h2>
+          <div class="class-code">WPM</div>
+          <span class="role-badge role-Fighter">Fighter</span>
+          <span class="role-badge">DPS</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:88%; background:#ffec8b;"></div>
+        <span class="bar-value">A</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:40%; background:#add8e6;"></div>
+        <span class="bar-value">C</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">A</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Katana &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>ATK: +10</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Weapon Mastery</strong> — Basic attacks and Weapon Abilities deal an additional hit equal to 15% damage</li><li><strong>Precision I</strong> — Gain 5% Accuracy • Gain 5% Critical Hit Chance</li><li><strong>Attack Boost</strong> — Gain 10% ATK</li><li><strong>Riposte</strong> — Chance equal to EVA to counter with a 66% basic attack</li><li><strong>Combat Momentum</strong> — After defeating an enemy, gain +2 MOVE until end of turn.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Twin Slash</div>
+              <div class="ability-summary">55% Attack • 2-hits</div>
+              <div class="ability-meta">Range: M · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Whirlwind</div>
+              <div class="ability-summary">35% Attack (Surround)</div>
+              <div class="ability-meta">Range: Surr · Cost: 10 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Prepare</div>
+              <div class="ability-summary">Gain [SM] ATK (3T) • Next ability costs 50% less</div>
+              <div class="ability-meta">Range: S · Cost: 10 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Jagged Edges</div>
+              <div class="ability-summary">60% Attack • 2-hit • 25% Wound</div>
+              <div class="ability-meta">Range: M · Cost: 12 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">1000 Cuts</div>
+              <div class="ability-summary">40% Attack (Cone) • 3-hits • Critical hits deal 25% more damage</div>
+              <div class="ability-meta">Range: M · Cost: 16 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Weapon Swap</div>
+              <div class="ability-summary">Freely, once per turn, swap equipped weapon • Gain 5% damage (1T) stacking up to 15%</div>
+              <div class="ability-meta">Range: S · Cost: -</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Caster" data-search="weaver wea caster support mag: +2.5 mpr. +.75 haste slow fly weaver mastery mental fortitude serenity psychic barrier haste slow fly quicken delay halt expand mend">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a2a6a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a2a6a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="34" y="36" width="10" height="6" fill="#8b5cf6"/>
+  <rect x="16" y="34" width="16" height="4" fill="#8b5cf6"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e8d0b0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e8d0b0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#2a2030"/>
+  <rect x="10" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="32" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="16" y="10" width="16" height="4" fill="#2a2030"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#8b5cf6"/>
+  <rect x="22" y="44" width="4" height="4" fill="#c0b0e0"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Weaver</h2>
+          <div class="class-code">WEA</div>
+          <span class="role-badge role-Caster">Caster</span>
+          <span class="role-badge">Support</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:58%; background:#adff2f;"></div>
+        <span class="bar-value">B-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:32%; background:#b0c4de;"></div>
+        <span class="bar-value">C-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:88%; background:#ffec8b;"></div>
+        <span class="bar-value">A</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">A</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Bracelet &nbsp;·&nbsp; <strong>Armor:</strong> Medium</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>Mag: +2.5</li><li>MPR. +.75</li><li>Haste</li><li>Slow</li><li>Fly</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Weaver Mastery</strong> — Regular attacks heal instead of dealing damage.</li><li><strong>Mental Fortitude</strong> — Reduce Spell damage taken by 10%.</li><li><strong>Serenity</strong> — Gain 1 MP when directly healed.</li><li><strong>Psychic Barrier</strong> — When damaged by a Spell, gain a Spell Shield equal to 10% MAG.</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Haste</div>
+              <div class="ability-summary">Grant Haste (3T)</div>
+              <div class="ability-meta">Range: 6 · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Slow</div>
+              <div class="ability-summary">Inflict Slow (3T)</div>
+              <div class="ability-meta">Range: 6 · Cost: 8 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Fly</div>
+              <div class="ability-summary">Grant Fly (3T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Quicken</div>
+              <div class="ability-summary">Quicken</div>
+              <div class="ability-meta">Range: 4 · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Delay</div>
+              <div class="ability-summary">Delay</div>
+              <div class="ability-meta">Range: 4 · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Halt</div>
+              <div class="ability-summary">50% Stop (3T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 14 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Expand</div>
+              <div class="ability-summary">Your next single target Spell becomes an area spell</div>
+              <div class="ability-meta">Range: S · Cost: 14 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Mend</div>
+              <div class="ability-summary">80% Healing Spell • Barrier: Block the next Affliction or Debuff (3T)</div>
+              <div class="ability-meta">Range: 4 · Cost: 8 MP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+    <div class="card" data-role="Caster" data-search="witch wch caster dps mag: +5 afflict: +10% witch mastery torturer blight curse absorbtion levitate hex afflict tonic whiskers i whiskers ii pain share poppets afflict ii">
+      <div class="card-header">
+        <div class="class-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 56" width="80" height="94" style="image-rendering:pixelated">
+  <rect width="48" height="56" fill="#12101c"/>
+  <rect x="4" y="38" width="40" height="18" fill="#2a1a3a"/>
+  <rect x="8" y="34" width="32" height="8" fill="#2a1a3a"/>
+  <rect x="4" y="36" width="10" height="6" fill="#9b59b6"/>
+  <rect x="34" y="36" width="10" height="6" fill="#9b59b6"/>
+  <rect x="16" y="34" width="16" height="4" fill="#9b59b6"/>
+  <rect x="18" y="28" width="12" height="8" fill="#e8d0b0"/>
+  <rect x="12" y="8" width="24" height="22" fill="#e8d0b0"/>
+  <rect x="10" y="6" width="28" height="8" fill="#2a2030"/>
+  <rect x="10" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="32" y="12" width="6" height="12" fill="#2a2030"/>
+  <rect x="16" y="10" width="16" height="4" fill="#2a2030"/>
+  <rect x="16" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="28" y="16" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="17" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="29" y="16" width="2" height="2" fill="#ffffff"/>
+  <rect x="20" y="24" width="8" height="2" fill="#a07060"/>
+  <rect x="20" y="42" width="8" height="8" fill="#9b59b6"/>
+  <rect x="22" y="44" width="4" height="4" fill="#c0b0e0"/>
+</svg></div>
+        <div class="class-title">
+          <h2>Witch</h2>
+          <div class="class-code">WCH</div>
+          <span class="role-badge role-Caster">Caster</span>
+          <span class="role-badge">DPS</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+    <div class="stat-row">
+      <span class="stat-label">HP</span>
+      <div class="bar-container">
+        <div class="bar" style="width:48%; background:#87ceeb;"></div>
+        <span class="bar-value">C+</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">ATK</span>
+      <div class="bar-container">
+        <div class="bar" style="width:32%; background:#b0c4de;"></div>
+        <span class="bar-value">C-</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">MAG</span>
+      <div class="bar-container">
+        <div class="bar" style="width:82%; background:#f0e68c;"></div>
+        <span class="bar-value">A-</span>
+      </div>
+    </div><div class="stat-row"><span class="stat-label">MP</span><span class="grade-only">A</span></div><div class="stat-row"><span class="stat-label">EVA</span><span class="grade-only">B</span></div><div class="stat-row"><span class="stat-label">SPD</span><span class="grade-only">B+</span></div></div>
+        <div class="move-jump">
+          <div><span>MOVE</span> <strong>3</strong></div>
+          <div><span>JUMP</span> <strong>3</strong></div>
+        </div>
+        <div class="equip"><strong>Weapon:</strong> Wand &nbsp;·&nbsp; <strong>Armor:</strong> Light</div>
+        <div class="section-title">Class Package</div><ul class="package-list"><li>Mag: +5</li><li>Afflict: +10%</li></ul>
+      </div>
+      <div class="card-details">
+        <div class="section-title">Mastery & Passives</div><ul class="passive-list"><li><strong>Witch Mastery</strong> — Hex duration doesn't decrease if the target has an affliction.</li><li><strong>Torturer</strong> — Damaging Afflictions deal 50% more damage and other Afflictions last 1 turn longer.</li><li><strong>Blight</strong> — Enemies suffering 2 or more Afflictions take 15% increased damage from you.</li><li><strong>Curse Absorbtion</strong> — When gaining an Affliction, restore 2 MP</li><li><strong>Levitate</strong> — Gain Levitate</li></ul>
+        <div class="section-title">Basic Abilities</div><div class="ability">
+              <div class="ability-name">Hex</div>
+              <div class="ability-summary">Inflict Hex (3T)</div>
+              <div class="ability-meta">Range: 6 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Afflict</div>
+              <div class="ability-summary">40% Dark Spell • 75% randomly inflict an Affliction (3T)</div>
+              <div class="ability-meta">Range: - · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Tonic</div>
+              <div class="ability-summary">60% Healing Spell • Remove 1 Affliction</div>
+              <div class="ability-meta">Range: 4 · Cost: 4 MP</div>
+            </div>
+        <div class="section-title">Advanced Abilities</div><div class="ability">
+              <div class="ability-name">Whiskers I</div>
+              <div class="ability-summary">Summon Whiskers (6T) • 30% Attack against targets with Afflictions • Prio Hex target</div>
+              <div class="ability-meta">Range: 4 · Cost: 6 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Whiskers II</div>
+              <div class="ability-summary">40% Dark Spell • Move Whiskers adjacent to you</div>
+              <div class="ability-meta">Range: S · Cost: 4 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Pain Share</div>
+              <div class="ability-summary">Grant yourself a random Affliction • Grant Hex target a random Affliction</div>
+              <div class="ability-meta">Range: - · Cost: 5% HP</div>
+            </div><div class="ability">
+              <div class="ability-name">Poppets</div>
+              <div class="ability-summary">Inflict Poppet • 15% of damage dealt to this target is redirected to the Hex target</div>
+              <div class="ability-meta">Range: 4 · Cost: 16 MP</div>
+            </div><div class="ability">
+              <div class="ability-name">Afflict II</div>
+              <div class="ability-summary">125% Dark Spell to all Afflicted enemies • Refresh Affliction Duration</div>
+              <div class="ability-meta">Range: Map · Cost: 20% HP</div>
+            </div>
+      </div>
+      <div class="expand-hint">Click to expand / collapse</div>
+    </div>
+    
+  </div>
+  <footer>
+    Fantasy RPG Class Codex · High-quality portraits for Starters
+  </footer>
+<script>
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => card.classList.toggle('expanded'));
+  });
+  const buttons = document.querySelectorAll('.filter-btn');
+  const cards = document.querySelectorAll('.card');
+  const search = document.getElementById('search');
+  let currentRole = 'all';
+  function applyFilters() {
+    const q = search.value.toLowerCase().trim();
+    cards.forEach(card => {
+      const roleMatch = currentRole === 'all' || card.dataset.role === currentRole;
+      const searchMatch = !q || card.dataset.search.includes(q);
+      card.classList.toggle('hidden', !(roleMatch && searchMatch));
+    });
+  }
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentRole = btn.dataset.role;
+      applyFilters();
+    });
+  });
+  search.addEventListener('input', applyFilters);
+</script>
+</body>
+</html>
